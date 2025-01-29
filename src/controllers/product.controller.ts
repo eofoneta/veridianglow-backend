@@ -1,4 +1,4 @@
-import e, { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import Product, { IProduct } from "../models/product.model";
 import cloudinary from "../lib/cloudinary";
 import { AppError } from "../error/GlobalErrorHandler";

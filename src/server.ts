@@ -5,6 +5,7 @@ import { errorHandler } from "./error/GlobalErrorHandler";
 import cookieParser from "cookie-parser";
 import { authRoute } from "./routes/auth.route";
 import { productRoute } from "./routes/product.route";
+import { cartRoute } from "./routes/cart.route";
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(cookieParser());
 
 app.use("/api/auth", authRoute);
 app.use("/api/product", productRoute);
+app.use("/api/cart", cartRoute);
 
 // Global error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
