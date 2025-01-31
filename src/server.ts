@@ -6,6 +6,9 @@ import cookieParser from "cookie-parser";
 import { authRoute } from "./routes/auth.route";
 import { productRoute } from "./routes/product.route";
 import { cartRoute } from "./routes/cart.route";
+import { couponRoute } from "./routes/coupon.route";
+import { paymentRoute } from "./routes/payment.route";
+import { paystackWebhook } from "./controllers/payment.controller";
 
 dotenv.config();
 
@@ -19,6 +22,11 @@ app.use(cookieParser());
 app.use("/api/auth", authRoute);
 app.use("/api/product", productRoute);
 app.use("/api/cart", cartRoute);
+app.use("/api/coupon", couponRoute); //  TODO test coupon endpoints
+app.use("/api/payment", paymentRoute);
+
+// register paystack webhook
+app.post("/webhook", express.json(), paystackWebhook);
 
 // Global error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
