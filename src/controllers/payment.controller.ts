@@ -5,11 +5,13 @@ import {
   calculateTotal,
   convertToNaira,
   getDeliveryFee,
+  handleChargeSuccess,
+  PaystackEvent,
+  validatePaystackWebhook,
 } from "../utils/payment.util";
 import { ObjectId } from "mongoose";
 import { AppError } from "../error/GlobalErrorHandler";
 import Order from "../models/order.model";
-import crypto from "crypto";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -49,6 +51,10 @@ export const initializeCheckout = async (
     const deliveryFee = getDeliveryFee(location);
 
     const koboToNaira = convertToNaira(amount);
+    const currentDate = new Date();
+    const estimatedDeliveryDate = currentDate.setDate(
+      currentDate.getDate() + 3
+    ); // this is a fixed date and should NOT be used in production
 
     const order = new Order({
       userId,
@@ -64,10 +70,24 @@ export const initializeCheckout = async (
       email: req.user?.email!,
       amount: koboToNaira,
       currency,
-      metadata: { userId, products, subtotal, deliveryFee, tax },
+      metadata: {
+        userId,
+        products,
+        subtotal,
+        deliveryFee,
+        tax,
+        location,
+        estimatedDeliveryDate,
+      },
     });
 
-    order.paystackReference = paystackResponse.data?.reference!;
+    if (!paystackResponse.status)
+      throw new AppError("Error validating trasaction", 400);
+
+    if (!paystackResponse.data?.reference)
+      throw new AppError("Paystack referance ID not found", 404);
+
+    order.paystackReference = paystackResponse.data?.reference;
     await order.save();
 
     res.status(paystackResponse.status ? 200 : 400).json(paystackResponse);
@@ -85,15 +105,23 @@ export const verifyPayment = async (
     const { reference } = req.params;
 
     const paystackResponse = await paystackClient.transaction.verify(reference);
-    if (!paystackResponse.status)
+    if (!paystackResponse.status) {
       throw new AppError("Invalid reference code", 400);
+    }
+    
     if (paystackResponse.data?.status === "failed") {
+      await Order.findOneAndUpdate(
+        { paystackReference: reference },
+        {
+          status: "FAILED",
+        }
+      );
       throw new AppError("Payment failed", 400);
     }
 
     res.json({
       status: paystackResponse.data?.status,
-      message: paystackResponse.data?.message,
+      gatewayResponse: paystackResponse.data?.gateway_response,
     });
   } catch (error) {
     next(error);
@@ -107,41 +135,19 @@ export const paystackWebhook = async (
 ) => {
   try {
     const secret = process.env.PAYSTACK_API_SECRET as string;
+    if (!secret) {
+      throw new AppError("Paystack secret is not configured", 500);
+    }
 
-    const hash = crypto
-      .createHmac("sha512", secret)
-      .update(JSON.stringify(req.body))
-      .digest("hex");
-
-    if (hash !== req.headers["x-paystack-signature"]) {
+    if (!validatePaystackWebhook(req, secret)) {
       throw new AppError("Unauthorized paystack signature", 401);
     }
 
-    const event = req.body;
-    console.log("Event", req.body);
+    const event = req.body as PaystackEvent;
 
     if (event.event === "charge.success") {
-      const { reference, customer, amount, currency } = event.data;
-
-      await Order.findOneAndUpdate(
-        { paystackReference: reference },
-        { status: "PAID" }
-      );
-      console.log(
-        `✅ Payment received from ${customer.email} for ${
-          amount / 100
-        } ${currency}`
-      );
+      await handleChargeSuccess(event);
     }
-    //  if (event.event === "charge.failed") {
-    //   await Order.findOneAndUpdate(
-    //     { paystackReference: reference },
-    //     { status: "FAILED", transactionDetails: event.data }
-    //   );
-    //   console.log(
-    //     `❌ Payment failed for ${customer.email} for ${amount / 100} ${currency}. Reason: ${status}`
-    //   );
-    // }
     res.sendStatus(200);
   } catch (error) {
     next(error);

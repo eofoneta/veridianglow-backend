@@ -1,5 +1,33 @@
+import crypto from "crypto";
+import { Request } from "express";
+import Order from "../models/order.model";
+
+export interface PaystackEvent {
+  event: string;
+  data: {
+    reference: string;
+    customer: {
+      email: string;
+    };
+    amount: number;
+    fees: number;
+    id: string;
+    currency: string;
+    status?: string;
+    gateway_response: string;
+    paid_at: Date;
+    metadata: {
+      location: string;
+      estimatedDeliveryDate: Date;
+    };
+    authorization: {
+      channel: string;
+    };
+  };
+}
+
 /**
- * This is just for testing, NOT to be used in production
+ * @param fixedDeliveryFees is just for testing, NOT to be used in production
  */
 const fixedDeliveryFees: Record<string, number> = {
   lagos: 1000,
@@ -30,4 +58,56 @@ export const calculateTotal = (subtotal: number, location: string): number => {
   const tax = calculateTax(subtotal);
   const totalAmount = subtotal + deliveryFee + tax;
   return totalAmount;
+};
+
+/**
+ * Web hook helpers
+ */
+export const validatePaystackWebhook = (
+  req: Request,
+  secret: string
+): boolean => {
+  const hash = crypto
+    .createHmac("sha512", secret)
+    .update(JSON.stringify(req.body))
+    .digest("hex");
+
+  return hash === req.headers["x-paystack-signature"];
+};
+
+export const handleChargeSuccess = async (event: PaystackEvent) => {
+  const {
+    reference,
+    id,
+    amount,
+    currency,
+    paid_at,
+    customer,
+    authorization,
+    gateway_response,
+    fees,
+    metadata,
+  } = event.data;
+
+  await Order.findOneAndUpdate(
+    { paystackReference: reference },
+    {
+      status: "PAID",
+      deliveryLocation: metadata.location,
+      estimatedDeliveryDate: metadata.estimatedDeliveryDate,
+      email: customer.email,
+      amountPaid: amount / 100,
+      transactionId: id,
+      currency,
+      paymentMethod: authorization.channel,
+      transactionDate: paid_at,
+      gatewayResponse: gateway_response,
+      paystackFees: fees / 100,
+    }
+  );
+  console.log(
+    `✅ Payment received: ${customer.email} paid ${
+      amount / 100
+    } ${currency} via ${authorization.channel}`
+  );
 };

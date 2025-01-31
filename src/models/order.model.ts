@@ -1,4 +1,4 @@
-import mongoose, { Document, Double, Model, ObjectId } from "mongoose";
+import mongoose, { Document, Model, ObjectId } from "mongoose";
 
 export interface IOrder extends Document {
   userId: ObjectId;
@@ -9,10 +9,20 @@ export interface IOrder extends Document {
   }[];
   subtotal: number;
   deliveryFee: number;
+  deliveryLocation: string;
+  estimatedDeliveryDate: Date;
   tax: number;
   totalAmount: number;
   status: "PENDING" | "PAID" | "SHIPPED" | "DELIVERED" | "FAILED";
   paystackReference: string;
+  transactionId: string;
+  email: string;
+  amountPaid: string;
+  currency: string;
+  paymentMethod: string;
+  transactionDate: Date;
+  gatewayResponse: string;
+  paystackFees: string;
 }
 
 const OrderSchema = new mongoose.Schema<IOrder>(
@@ -55,6 +65,15 @@ const OrderSchema = new mongoose.Schema<IOrder>(
       default: "PENDING",
     },
     paystackReference: { type: String, required: true },
+    email: String,
+    amountPaid: String,
+    currency: String,
+    paymentMethod: String,
+    transactionDate: Date,
+    gatewayResponse: String,
+    paystackFees: String,
+    deliveryLocation: String,
+    estimatedDeliveryDate: Date,
   },
   { timestamps: true }
 );
