@@ -24,7 +24,7 @@ type CheckoutDetails = {
     quantity: number;
     price: number;
   };
-  couponCode: string;
+  couponCode: string | undefined;
   location: string;
   email: string;
   currency: "NGN";
@@ -84,6 +84,7 @@ export const initializeCheckout = async (
       amount: convertToNaira(totalAmount),
       currency,
       metadata: {
+        couponCode: couponCode,
         userId,
         products,
         subtotal,

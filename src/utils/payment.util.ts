@@ -20,6 +20,8 @@ export interface PaystackEvent {
     paid_at: Date;
     metadata: {
       location: string;
+      userId: string;
+      couponCode: string;
       estimatedDeliveryDate: Date;
     };
     authorization: {
@@ -90,6 +92,13 @@ export const handleChargeSuccess = async (event: PaystackEvent) => {
     fees,
     metadata,
   } = event.data;
+
+  if (metadata.couponCode) {
+    await Coupon.findOneAndUpdate(
+      { code: metadata.couponCode },
+      { isActive: false }
+    );
+  }
 
   await Order.findOneAndUpdate(
     { paystackReference: reference },
