@@ -42,7 +42,7 @@ export const getCoupon = async (
   next: NextFunction
 ) => {
   try {
-    const coupoun = await Coupon.findOne({
+    const coupoun = await Coupon.find({
       userId: req.user?._id,
       isActive: true,
     });

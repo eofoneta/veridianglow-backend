@@ -2,7 +2,6 @@ import { NextFunction, Request, Response } from "express";
 import { paystackClient } from "../lib/paystack";
 import {
   applyCoupon,
-  calculateDiscountedTotal,
   calculateTax,
   calculateTotal,
   convertToNaira,
@@ -15,7 +14,7 @@ import { ObjectId } from "mongoose";
 import { AppError } from "../error/GlobalErrorHandler";
 import Order from "../models/order.model";
 import dotenv from "dotenv";
-import Coupon from "../models/coupon.model";
+import { createCoupon } from "../utils/coupon.util";
 dotenv.config();
 
 type CheckoutDetails = {
@@ -75,7 +74,7 @@ export const initializeCheckout = async (
       subtotal,
       deliveryFee,
       tax,
-      totalAmount: amount,
+      totalAmount,
       discountedTotal,
       status: "PENDING",
     });
@@ -101,8 +100,12 @@ export const initializeCheckout = async (
     }
 
     order.paystackReference = paystackResponse.data?.reference;
-    console.log("Discounted total", discountedTotal);
     await order.save();
+
+    // create a free coupon for purchase over 200_000
+    if (totalAmount > 200000) {
+      await createCoupon(userId, 10);
+    }
 
     res.status(paystackResponse.status ? 200 : 400).json(paystackResponse);
   } catch (error: any) {
