@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import { paystackClient } from "../lib/paystack";
 import {
+  applyCoupon,
+  calculateDiscountedTotal,
   calculateTax,
   calculateTotal,
   convertToNaira,
@@ -13,6 +15,7 @@ import { ObjectId } from "mongoose";
 import { AppError } from "../error/GlobalErrorHandler";
 import Order from "../models/order.model";
 import dotenv from "dotenv";
+import Coupon from "../models/coupon.model";
 dotenv.config();
 
 type CheckoutDetails = {
@@ -22,7 +25,7 @@ type CheckoutDetails = {
     quantity: number;
     price: number;
   };
-  // couponCode: string;
+  couponCode: string;
   location: string;
   email: string;
   currency: "NGN";
@@ -34,8 +37,14 @@ export const initializeCheckout = async (
   next: NextFunction
 ) => {
   try {
-    const { products, location, currency = "NGN" }: CheckoutDetails = req.body;
-    const userId = req.user?._id;
+    const {
+      products,
+      location,
+      currency = "NGN",
+      couponCode,
+    }: CheckoutDetails = req.body;
+
+    const userId = req.user?.id;
 
     if (!Array.isArray(products) || !products.length) {
       throw new AppError("Invalid or empty products", 400);
@@ -45,16 +54,20 @@ export const initializeCheckout = async (
       (acc, item) => acc + item.price * item.quantity,
       0
     );
-
     const amount = calculateTotal(subtotal, location);
+    /**
+     * tax and delivery have been calculated in calculateTotal function
+     * these two are information for metadata
+     */
     const tax = calculateTax(amount);
     const deliveryFee = getDeliveryFee(location);
 
-    const koboToNaira = convertToNaira(amount);
-    const currentDate = new Date();
-    const estimatedDeliveryDate = currentDate.setDate(
-      currentDate.getDate() + 3
-    ); // this is a fixed date and should NOT be used in production
+    let discountedTotal = 0;
+    if (couponCode) {
+      discountedTotal = await applyCoupon(couponCode, userId, subtotal);
+    }
+
+    const totalAmount = amount - discountedTotal;
 
     const order = new Order({
       userId,
@@ -63,12 +76,13 @@ export const initializeCheckout = async (
       deliveryFee,
       tax,
       totalAmount: amount,
+      discountedTotal,
       status: "PENDING",
     });
 
     const paystackResponse = await paystackClient.transaction.initialize({
       email: req.user?.email!,
-      amount: koboToNaira,
+      amount: convertToNaira(totalAmount),
       currency,
       metadata: {
         userId,
@@ -77,17 +91,17 @@ export const initializeCheckout = async (
         deliveryFee,
         tax,
         location,
-        estimatedDeliveryDate,
+        discountedTotal,
+        estimatedDeliveryDate: new Date().setDate(new Date().getDate() + 3), // this is a fixed date and should NOT be used in production
       },
     });
 
-    if (!paystackResponse.status)
+    if (!paystackResponse.status || !paystackResponse.data?.reference) {
       throw new AppError("Error validating trasaction", 400);
-
-    if (!paystackResponse.data?.reference)
-      throw new AppError("Paystack referance ID not found", 404);
+    }
 
     order.paystackReference = paystackResponse.data?.reference;
+    console.log("Discounted total", discountedTotal);
     await order.save();
 
     res.status(paystackResponse.status ? 200 : 400).json(paystackResponse);
@@ -108,7 +122,7 @@ export const verifyPayment = async (
     if (!paystackResponse.status) {
       throw new AppError("Invalid reference code", 400);
     }
-    
+
     if (paystackResponse.data?.status === "failed") {
       await Order.findOneAndUpdate(
         { paystackReference: reference },

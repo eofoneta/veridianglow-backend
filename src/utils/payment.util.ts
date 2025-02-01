@@ -1,6 +1,8 @@
 import crypto from "crypto";
 import { Request } from "express";
 import Order from "../models/order.model";
+import Coupon from "../models/coupon.model";
+import { AppError } from "../error/GlobalErrorHandler";
 
 export interface PaystackEvent {
   event: string;
@@ -27,7 +29,7 @@ export interface PaystackEvent {
 }
 
 /**
- * @param fixedDeliveryFees is just for testing, NOT to be used in production
+ * @function fixedDeliveryFees is just for testing, NOT to be used in production
  */
 const fixedDeliveryFees: Record<string, number> = {
   lagos: 1000,
@@ -110,4 +112,41 @@ export const handleChargeSuccess = async (event: PaystackEvent) => {
       amount / 100
     } ${currency} via ${authorization.channel}`
   );
+};
+
+/**
+ * Coupon helpers
+ */
+export function calculateDiscountedTotal(
+  discountPercentage: number,
+  total: number
+): number {
+  return total * (discountPercentage / 100);
+}
+
+/**
+ * Applies a coupon to the subtotal if the coupon is valid and not expired.
+ * @returns The discounted total after applying the coupon.
+ */
+export const applyCoupon = async (
+  couponCode: string,
+  userId: string,
+  subtotal: number
+): Promise<number> => {
+  const coupon = await Coupon.findOne({
+    code: couponCode,
+    isActive: true,
+    userId,
+  });
+
+  if (!coupon) {
+    throw new AppError("Invalid or used coupon", 400);
+  }
+
+  const currentDate = new Date();
+  if (coupon.expirationDate < currentDate) {
+    throw new AppError("Coupon has expired", 400);
+  }
+
+  return calculateDiscountedTotal(coupon.discountPercentage, subtotal);
 };

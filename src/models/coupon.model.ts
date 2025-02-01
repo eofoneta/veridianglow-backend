@@ -1,11 +1,13 @@
 import mongoose, { Model, ObjectId } from "mongoose";
 
-interface ICoupon extends Document {
+export interface ICoupon extends Document {
   code: string;
   discountPercentage: number;
   expirationDate: Date;
   isActive: boolean;
   userId: ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const CouponSchema = new mongoose.Schema<ICoupon>(
@@ -19,7 +21,7 @@ const CouponSchema = new mongoose.Schema<ICoupon>(
       type: Number,
       required: true,
       min: [0, "Discount percentage must be greater than 0"],
-      max: [100, "Discount percentage must be less than 100"],
+      max: [40, "Discount percentage must be less than 40"],
     },
     expirationDate: {
       type: Date,

@@ -15,6 +15,7 @@ export interface IOrder extends Document {
   totalAmount: number;
   status: "PENDING" | "PAID" | "SHIPPED" | "DELIVERED" | "FAILED";
   paystackReference: string;
+  discountedTotal: number;
   transactionId: string;
   email: string;
   amountPaid: string;
@@ -57,6 +58,7 @@ const OrderSchema = new mongoose.Schema<IOrder>(
       min: 0.0,
     },
     subtotal: { type: Number, required: true, min: 0.0 },
+    discountedTotal: { type: Number },
     deliveryFee: { type: Number, required: true },
     tax: { type: Number, required: true },
     status: {
