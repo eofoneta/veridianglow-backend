@@ -7,13 +7,14 @@ export interface IOrder extends Document {
     quantity: number;
     price: number;
   }[];
+  paid: boolean;
   subtotal: number;
   deliveryFee: number;
   deliveryLocation: string;
   estimatedDeliveryDate: Date;
   tax: number;
   totalAmount: number;
-  status: "PENDING" | "PAID" | "SHIPPED" | "DELIVERED" | "FAILED";
+  status: "PENDING" | "PAID" | "FAILED" | "SHIPPED" | "DELIVERED";
   paystackReference: string;
   discountedTotal: number;
   transactionId: string;
@@ -52,6 +53,10 @@ const OrderSchema = new mongoose.Schema<IOrder>(
         },
       },
     ],
+    paid: {
+      type: Boolean,
+      default: false,
+    },
     totalAmount: {
       type: Number,
       required: true,

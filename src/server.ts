@@ -9,6 +9,7 @@ import { cartRoute } from "./routes/cart.route";
 import { couponRoute } from "./routes/coupon.route";
 import { paymentRoute } from "./routes/payment.route";
 import { paystackWebhook } from "./controllers/payment.controller";
+import { analyticsRoutes } from "./routes/analytics.route";
 
 dotenv.config();
 
@@ -22,8 +23,9 @@ app.use(cookieParser());
 app.use("/api/auth", authRoute);
 app.use("/api/product", productRoute);
 app.use("/api/cart", cartRoute);
-app.use("/api/coupon", couponRoute); //  TODO test coupon endpoints
+app.use("/api/coupon", couponRoute);
 app.use("/api/payment", paymentRoute);
+app.use("/api/analytics", analyticsRoutes);
 
 // register paystack webhook
 app.post("/webhook", express.json(), paystackWebhook);

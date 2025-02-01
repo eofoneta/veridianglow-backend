@@ -103,6 +103,7 @@ export const handleChargeSuccess = async (event: PaystackEvent) => {
   await Order.findOneAndUpdate(
     { paystackReference: reference },
     {
+      paid: true,
       status: "PAID",
       deliveryLocation: metadata.location,
       estimatedDeliveryDate: metadata.estimatedDeliveryDate,
