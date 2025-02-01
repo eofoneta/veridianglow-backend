@@ -3,6 +3,8 @@ import { Request } from "express";
 import Order from "../models/order.model";
 import Coupon from "../models/coupon.model";
 import { AppError } from "../error/GlobalErrorHandler";
+import { ObjectId } from "mongoose";
+import Product from "../models/product.model";
 
 export interface PaystackEvent {
   event: string;
@@ -19,6 +21,11 @@ export interface PaystackEvent {
     gateway_response: string;
     paid_at: Date;
     metadata: {
+      products: {
+        productId: ObjectId;
+        quantity: string; // metadata returns it as string
+        price: number;
+      }[];
       location: string;
       userId: string;
       couponCode: string;
@@ -117,6 +124,18 @@ export const handleChargeSuccess = async (event: PaystackEvent) => {
       paystackFees: fees / 100,
     }
   );
+
+  /**
+   * @bulkOperations Reduce stock by purchased quantity
+   */
+  const bulkOperations = metadata.products.map((product) => ({
+    updateOne: {
+      filter: { _id: product.productId },
+      update: { $inc: { stock: -Number(product.quantity) } },
+    },
+  }));
+
+  await Product.bulkWrite(bulkOperations);
   console.log(
     `✅ Payment received: ${customer.email} paid ${
       amount / 100
