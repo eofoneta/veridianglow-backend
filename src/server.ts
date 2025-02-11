@@ -10,6 +10,7 @@ import { couponRoute } from "./routes/coupon.route";
 import { paymentRoute } from "./routes/payment.route";
 import { paystackWebhook } from "./controllers/payment.controller";
 import { analyticsRoutes } from "./routes/analytics.route";
+import { orderRoute } from "./routes/order.route";
 
 dotenv.config();
 
@@ -26,6 +27,10 @@ app.use("/api/cart", cartRoute);
 app.use("/api/coupon", couponRoute);
 app.use("/api/payment", paymentRoute);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/order", orderRoute);
+
+// TODO - send email to users on DELIVERED | SHIPPED orders // test this
+// TODO - make an api for customer to cancel an order
 
 // register paystack webhook
 app.post("/webhook", express.json(), paystackWebhook);

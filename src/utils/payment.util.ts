@@ -5,6 +5,7 @@ import Coupon from "../models/coupon.model";
 import { AppError } from "../error/GlobalErrorHandler";
 import { ObjectId } from "mongoose";
 import Product from "../models/product.model";
+import { sendOrderReceivedEmail } from "../email/emailServie";
 
 export interface PaystackEvent {
   event: string;
@@ -22,13 +23,18 @@ export interface PaystackEvent {
     paid_at: Date;
     metadata: {
       products: {
+        productName: string;
         productId: ObjectId;
         quantity: string; // metadata returns it as string
         price: number;
       }[];
       location: string;
+      orderId: string;
+      firstName: string;
       userId: string;
       couponCode: string;
+      deliveryFee: number;
+      discount: number;
       estimatedDeliveryDate: Date;
     };
     authorization: {
@@ -135,6 +141,7 @@ export const handleChargeSuccess = async (event: PaystackEvent) => {
     },
   }));
 
+  await sendOrderReceivedEmail(customer.email, event);
   await Product.bulkWrite(bulkOperations);
   console.log(
     `✅ Payment received: ${customer.email} paid ${

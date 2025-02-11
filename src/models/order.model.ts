@@ -3,6 +3,7 @@ import mongoose, { Document, Model, ObjectId } from "mongoose";
 export interface IOrder extends Document {
   userId: ObjectId;
   products: {
+    productName: string;
     productId: ObjectId;
     quantity: number;
     price: number;
@@ -25,6 +26,8 @@ export interface IOrder extends Document {
   transactionDate: Date;
   gatewayResponse: string;
   paystackFees: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const OrderSchema = new mongoose.Schema<IOrder>(
@@ -36,6 +39,10 @@ const OrderSchema = new mongoose.Schema<IOrder>(
     },
     products: [
       {
+        productName: {
+          type: String,
+          required: true,
+        },
         productId: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "Product",

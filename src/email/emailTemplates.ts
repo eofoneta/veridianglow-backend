@@ -1,4 +1,4 @@
-export const VERIFICATION_EMAIL_TEMPLATE =/*html*/ `
+export const VERIFICATION_EMAIL_TEMPLATE = /*html*/ `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,7 +28,7 @@ export const VERIFICATION_EMAIL_TEMPLATE =/*html*/ `
 </html>
 `;
 
-export const PASSWORD_RESET_SUCCESS_TEMPLATE = /*html*/`
+export const PASSWORD_RESET_SUCCESS_TEMPLATE = /*html*/ `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -64,7 +64,7 @@ export const PASSWORD_RESET_SUCCESS_TEMPLATE = /*html*/`
 </html>
 `;
 
-export const PASSWORD_RESET_REQUEST_TEMPLATE = /*html*/`
+export const PASSWORD_RESET_REQUEST_TEMPLATE = /*html*/ `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -92,3 +92,227 @@ export const PASSWORD_RESET_REQUEST_TEMPLATE = /*html*/`
 </body>
 </html>
 `;
+
+export const ORDER_CONFIRMED_TEMPLATE = /*html */ `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payment Receipt</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f8f8f8;
+      }
+      .container {
+        max-width: 600px;
+        margin: 20px auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        text-align: center;
+        padding: 20px 0;
+      }
+      .header h1 {
+        margin: 0;
+        color: #F872C4;
+      }
+      .receipt-info {
+        margin: 20px 0;
+      }
+      .receipt-info p {
+        margin: 5px 0;
+        font-size: 16px;
+      }
+      .table-container {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .table-container th,
+      .table-container td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+      }
+      .table-container th {
+        background: #F872C4;
+        color: #fff;
+      }
+      .total {
+        text-align: right;
+        font-weight: bold;
+        margin-top: 10px;
+      }
+      .footer {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 14px;
+        color: #777;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Veridianglow</h1>
+        <span class="byveekee">byVeekee</span>
+        <p>
+          Dear<strong> {customerName}</strong>, your order <strong> {orderNumber}</strong> has been
+          confirmed successfully. It will be packed and shipped as soon as
+          possible.You will receive an update from us once the item(s) are ready
+          for delivery.
+        </p>
+      </div>
+      <div class="receipt-info">
+        <p><strong>Date:</strong> {date}</p>
+      </div>
+      <table class="table-container">
+        <tr>
+          <th>Item</th>
+          <th>Qty</th>
+          <th>Price</th>
+        </tr>
+        {items} <!-- This will be replaced with actual rows -->
+        <tr>
+          <td><strong>estimated delivery date</strong></td>
+          <td colspan="2" class="total">{estimatedDeliveryDate}</td>
+        </tr>
+        <tr>
+          <td><strong>delivery address</strong></td>
+          <td colspan="2" class="total">{deliveryAddress}</td>
+        </tr>
+        <tr>
+          <td><strong>Delivery</strong></td>
+          <td colspan="2" class="total">{deliveryFee}</td>
+        </tr>
+        <tr>
+          <td><strong>discount</strong></td>
+          <td colspan="2" class="total">{discount}</td>
+        </tr>
+        <tr>
+          <td><strong>Total</strong></td>
+          <td colspan="2" class="total">{totalAmount}</td>
+        </tr>
+      </table>
+      <div class="footer">
+        <p>Thank you for shopping with us!</p>
+        <p>For inquiries, contact veriadianglow@Veridianglow.com</p>
+      </div>
+    </div>
+  </body>
+</html>
+`;
+
+export const ORDER_SHIPPED_TEMPLATE = /*html */ `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Shipped</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f8f8f8;
+      }
+      .container {
+        max-width: 600px;
+        margin: 20px auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        text-align: center;
+        padding: 20px 0;
+      }
+      .header h1 {
+        margin: 0;
+        color: #f872c4;
+      }
+      .order-info {
+        margin: 20px 0;
+      }
+      .order-info p {
+        margin: 5px 0;
+        font-size: 16px;
+      }
+      .table-container {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .table-container th,
+      .table-container td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+      }
+      .table-container th {
+        background: #f872c4;
+        color: #fff;
+      }
+      .total {
+        text-align: right;
+        font-weight: bold;
+        margin-top: 10px;
+      }
+      .footer {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 14px;
+        color: #777;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Veridianglow</h1>
+        <p>Your order is on the way!</p>
+        <p>
+          We thought you'd like to know that your Item(s) from your order
+          <strong> {orderNumber}</strong>
+          has been shipped and is on the way to your location. You can review
+          your package status at any time by visiting your order status page on
+           our website or click  <a href="{trackOrder}">here</a>.
+        </p>
+      </div>
+      <div class="order-info">
+        <p><strong>Order No:</strong> #{orderNumber}</p>
+        <p><strong>Shipment Date:</strong> {shipmentDate}</p>
+      </div>
+      <table class="table-container">
+        <tr>
+          <th>Item</th>
+          <th>Qty</th>
+          <th>Price</th>
+        </tr>
+        {items}
+        <tr>
+          <td><strong>delivery address</strong></td>
+          <td colspan="2" class="total">{deliveryAddress}</td>
+      </tr>
+        <tr>
+          <td><strong>estimated delivery date</strong></td>
+          <td colspan="2" class="total">{estimatedDeliveryDate}</td>
+        </tr>
+      </table>
+      <div class="footer">
+        <p>Thank you for shopping with VeridianGlow!</p>
+        <p>For inquiries, contact support@VeridianGlow.com</p>
+      </div>
+    </div>
+  </body>
+</html>
+
+`;
+// TODO - Formart dates 

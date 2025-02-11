@@ -6,6 +6,7 @@ export interface IProduct extends Document {
   price: number;
   discountPrice: number;
   stock: number;
+  isOutOfStock: boolean;
   howToUse?: string;
   image: string;
   category: string;
@@ -45,6 +46,10 @@ const ProductSchema = new mongoose.Schema<IProduct>(
     stock: {
       type: Number,
       required: [true, "Please provide product stock"],
+    },
+    isOutOfStock: {
+      type: Boolean,
+      default: false,
     },
     howToUse: {
       type: String,

@@ -1,5 +1,9 @@
 import { AppError } from "../error/GlobalErrorHandler";
+import { IOrder } from "../models/order.model";
+import { PaystackEvent } from "../utils/payment.util";
 import {
+  ORDER_CONFIRMED_TEMPLATE,
+  ORDER_SHIPPED_TEMPLATE,
   PASSWORD_RESET_REQUEST_TEMPLATE,
   PASSWORD_RESET_SUCCESS_TEMPLATE,
   VERIFICATION_EMAIL_TEMPLATE,
@@ -73,3 +77,86 @@ export const sendResetSuccessEmail = async (email: string) => {
     throw new Error(`Error sending email ${error}`);
   }
 };
+
+export const sendOrderReceivedEmail = async (
+  email: string,
+  event: PaystackEvent
+): Promise<void> => {
+  const orderDetails: Record<string, any> = {
+    "{orderNumber}": event.data.metadata.orderId || "N/A",
+    "{date}": event.data.paid_at,
+    "{customerName}":
+      capitalize(event.data.metadata.firstName) || "Valued Customer",
+    "{estimatedDeliveryDate}":
+      event.data.metadata.estimatedDeliveryDate || "N/A",
+    "{deliveryAddress}": event.data.metadata.location || "N/A",
+    "{deliveryFee}": `$${event.data.metadata.deliveryFee || "0.00"}`,
+    "{discount}": `$${event.data.metadata.discount || "0.00"}`,
+    "{totalAmount}": `$${event.data.amount / 100}`,
+    "{items}": event.data.metadata.products
+      ? event.data.metadata.products
+          .map(
+            (item) =>
+              `<tr>
+                <td>${item.productName}</td>
+                <td>${item.quantity}</td>
+                <td>$${item.price}</td>
+              </tr>`
+          )
+          .join("")
+      : "<tr><td colspan='3'>No items found</td></tr>",
+  };
+
+  const emailHtml = ORDER_CONFIRMED_TEMPLATE.replace(
+    /({\w+})/gi,
+    (match) => orderDetails[match] || match
+  );
+
+  await mailtrapClient.send({
+    from: sender,
+    to: [{ email }],
+    subject: "Order confirmed",
+    html: emailHtml,
+    category: "Order confirmed",
+  });
+};
+
+export const sendOrderShipped = async (
+  email: string,
+  order: IOrder
+): Promise<void> => {
+  const orderDetails: Record<string, any> = {
+    "{orderNumber}": order.id || "N/A",
+    "{estimatedDeliveryDate}": order.estimatedDeliveryDate || "N/A",
+    "{shipmentDate}": order.updatedAt || "N/A",
+    "{deliveryAddress}": order.deliveryLocation || "N/A",
+    "{items}": order.products
+      ? order.products
+          .map(
+            (item) =>
+              `<tr>
+                <td>${item.productName}</td>
+                <td>${item.quantity}</td>
+                <td>$${item.price}</td>
+              </tr>`
+          )
+          .join("")
+      : "<tr><td colspan='3'>No items found</td></tr>",
+  };
+
+  const emailHtml = ORDER_SHIPPED_TEMPLATE.replace(
+    /({\w+})/gi,
+    (match) => orderDetails[match] || match
+  );
+
+  await mailtrapClient.send({
+    from: sender,
+    to: [{ email }],
+    subject: "Order shipped",
+    html: emailHtml,
+    category: "Order shipped",
+  });
+};
+
+const capitalize = (str: string) =>
+  str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();

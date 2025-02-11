@@ -20,6 +20,7 @@ dotenv.config();
 type CheckoutDetails = {
   userId: ObjectId;
   products: {
+    productName: string;
     productId: ObjectId;
     quantity: number;
     price: number;
@@ -84,9 +85,11 @@ export const initializeCheckout = async (
       amount: convertToNaira(totalAmount),
       currency,
       metadata: {
+        orderId: order.id,
+        firstName: req.user?.firstName,
         couponCode: couponCode,
         userId,
-        products,
+        products: order.products,
         subtotal,
         deliveryFee,
         tax,
@@ -101,7 +104,11 @@ export const initializeCheckout = async (
     }
 
     order.paystackReference = paystackResponse.data?.reference;
-    await order.save();
+    (order.estimatedDeliveryDate = new Date(
+      new Date().setDate(new Date().getDate() + 3)
+    )), // this is a fixed date and should NOT be used in production
+      // assigning this might not be important
+      await order.save();
 
     // create a free coupon for purchase over 200_000
     if (totalAmount > 200000) {
@@ -131,7 +138,12 @@ export const verifyPayment = async (
       await Order.findOneAndUpdate(
         { paystackReference: reference },
         {
+          paid: false,
           status: "FAILED",
+          gatewayResponse: paystackResponse.data?.gateway_response,
+          currency: paystackResponse.data.currency,
+          email: paystackResponse.data.customer.email,
+          paymentMethod: paystackResponse.data.authorization.channel,
         }
       );
       throw new AppError("Payment failed", 400);

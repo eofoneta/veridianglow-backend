@@ -88,6 +88,14 @@ export const getProductById = async (
     }
 
     const product = await Product.findOne({ _id: id, isArchived: false });
+    if (!product) throw new AppError("Product not found", 404);
+
+    const newStockStatus = product.stock === 0;
+    if (product.isOutOfStock !== newStockStatus) {
+      product.isOutOfStock = newStockStatus;
+      await product.save();
+    }
+
     res.json(product);
   } catch (error) {
     next(error);

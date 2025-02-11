@@ -22,5 +22,3 @@ export const getAnalytics = async (
     next(error);
   }
 };
-// TODO - send email to users on failed or completed transactions
-// TODO - update stocks on paid orders
