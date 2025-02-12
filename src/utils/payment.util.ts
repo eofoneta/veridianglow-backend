@@ -5,7 +5,7 @@ import Coupon from "../models/coupon.model";
 import { AppError } from "../error/GlobalErrorHandler";
 import { ObjectId } from "mongoose";
 import Product from "../models/product.model";
-import { sendOrderReceivedEmail } from "../email/emailServie";
+import { sendOrderReceivedEmail } from "../email/emailService";
 
 export interface PaystackEvent {
   event: string;

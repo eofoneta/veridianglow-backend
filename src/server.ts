@@ -29,7 +29,6 @@ app.use("/api/payment", paymentRoute);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/order", orderRoute);
 
-// TODO - send email to users on DELIVERED | SHIPPED orders // test this
 // TODO - make an api for customer to cancel an order
 
 // register paystack webhook

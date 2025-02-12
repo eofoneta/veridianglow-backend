@@ -283,11 +283,11 @@ export const ORDER_SHIPPED_TEMPLATE = /*html */ `
           <strong> {orderNumber}</strong>
           has been shipped and is on the way to your location. You can review
           your package status at any time by visiting your order status page on
-           our website or click  <a href="{trackOrder}">here</a>.
+           our website or click <a href="{frontendUrl}" >here</a>.
         </p>
       </div>
       <div class="order-info">
-        <p><strong>Order No:</strong> #{orderNumber}</p>
+        <p><strong>Order No:</strong> <strong> {orderNumber}</strong></p>
         <p><strong>Shipment Date:</strong> {shipmentDate}</p>
       </div>
       <table class="table-container">
@@ -313,6 +313,89 @@ export const ORDER_SHIPPED_TEMPLATE = /*html */ `
     </div>
   </body>
 </html>
-
 `;
-// TODO - Formart dates 
+
+export const DELIVERED_ORDER_TEMPLATE = /*html */ `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Delivered</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f8f8f8;
+      }
+      .container {
+        max-width: 600px;
+        margin: 20px auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        text-align: center;
+        padding: 20px 0;
+      }
+      .header h1 {
+        margin: 0;
+        color: #f872c4;
+      }
+      .order-info {
+        margin: 20px 0;
+      }
+      .order-info p {
+        margin: 5px 0;
+        font-size: 16px;
+      }
+      .footer {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 14px;
+        color: #777;
+      }
+      .button {
+        display: block;
+        width: 200px;
+        margin: 20px auto;
+        padding: 10px;
+        text-align: center;
+        background-color: #f872c4;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>VeridianGlow</h1>
+        <p>Your Order Has Been Delivered</p>
+      </div>
+      <div class="order-info">
+        <p><strong>Order No:</strong><strong> {orderNumber}</strong></p>
+        <p><strong>Delivery Date:</strong> {deliveryDate}</p>
+        <br />
+        <p>
+          We are delighted to inform you that your order has been successfully
+          delivered. We hope you love your purchase! Your satisfaction is our
+          top priority. If you have any feedback, please let us know.
+        </p>
+      </div>
+      <a href="{frontendUrl}" class="button">Rate your order</a>
+      <div class="footer">
+        <p>
+          Thank you for shopping with VeridianGlow! We look forward to serving
+          you again.
+        </p>
+        <p>For inquiries, contact support@Veridianglow.com</p>
+      </div>
+    </div>
+  </body>
+</html>
+`;

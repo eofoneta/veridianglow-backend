@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import Order from "../models/order.model";
 import { AppError } from "../error/GlobalErrorHandler";
-import { sendOrderShipped } from "../email/emailServie";
+import { sendOrderDelivered, sendOrderShipped } from "../email/emailService";
 
 export const updateDeliveryStatus = async (
   req: Request,
@@ -12,8 +12,9 @@ export const updateDeliveryStatus = async (
     const { status }: { status: "SHIPPED" | "DELIVERED" } = req.body;
     const { orderId } = req.params;
 
-    if (status !== "SHIPPED" && status !== "DELIVERED")
+    if (status !== "SHIPPED" && status !== "DELIVERED") {
       throw new AppError("Invalid status", 400);
+    }
 
     const order = await Order.findByIdAndUpdate(
       orderId,
@@ -23,9 +24,14 @@ export const updateDeliveryStatus = async (
 
     if (order?.status === "SHIPPED") {
       sendOrderShipped(order.email, order);
+    } else if (order?.status === "DELIVERED") {
+      sendOrderDelivered(order.email, order);
     }
 
-    res.json(order);
+    res.json({
+      success: true,
+      updatedStatus: order?.status,
+    });
   } catch (error) {
     next(error);
   }
@@ -76,4 +82,3 @@ export const fetchCustomerFailedOrders = async (
     next(error);
   }
 };
-

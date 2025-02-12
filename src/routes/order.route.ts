@@ -12,7 +12,7 @@ export const orderRoute = express.Router();
 orderRoute.patch(
   "/update_status/:orderId",
   protectedRoute,
-  adminRoute,
+  // adminRoute,
   updateDeliveryStatus
 );
 orderRoute.post("/status", protectedRoute, adminRoute, fetchOrderByStatus);

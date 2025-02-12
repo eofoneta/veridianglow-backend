@@ -11,7 +11,7 @@ import {
   sendResetPasswordEmail,
   sendResetSuccessEmail,
   sendVerificationEmail,
-} from "../email/emailServie";
+} from "../email/emailService";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { redisClient } from "../lib/redis";
 import crypto from "crypto";

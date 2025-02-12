@@ -2,6 +2,7 @@ import { AppError } from "../error/GlobalErrorHandler";
 import { IOrder } from "../models/order.model";
 import { PaystackEvent } from "../utils/payment.util";
 import {
+  DELIVERED_ORDER_TEMPLATE,
   ORDER_CONFIRMED_TEMPLATE,
   ORDER_SHIPPED_TEMPLATE,
   PASSWORD_RESET_REQUEST_TEMPLATE,
@@ -84,11 +85,11 @@ export const sendOrderReceivedEmail = async (
 ): Promise<void> => {
   const orderDetails: Record<string, any> = {
     "{orderNumber}": event.data.metadata.orderId || "N/A",
-    "{date}": event.data.paid_at,
+    "{date}": formatDate(event.data.paid_at) || "N/A",
     "{customerName}":
       capitalize(event.data.metadata.firstName) || "Valued Customer",
     "{estimatedDeliveryDate}":
-      event.data.metadata.estimatedDeliveryDate || "N/A",
+      formatDate(event.data.metadata.estimatedDeliveryDate) || "N/A",
     "{deliveryAddress}": event.data.metadata.location || "N/A",
     "{deliveryFee}": `$${event.data.metadata.deliveryFee || "0.00"}`,
     "{discount}": `$${event.data.metadata.discount || "0.00"}`,
@@ -127,8 +128,9 @@ export const sendOrderShipped = async (
 ): Promise<void> => {
   const orderDetails: Record<string, any> = {
     "{orderNumber}": order.id || "N/A",
-    "{estimatedDeliveryDate}": order.estimatedDeliveryDate || "N/A",
-    "{shipmentDate}": order.updatedAt || "N/A",
+    "{estimatedDeliveryDate}": formatDate(order.estimatedDeliveryDate) || "N/A",
+    "{shipmentDate}": formatDate(order.updatedAt) || "N/A",
+    "{frontendUrl}": `${process.env.FRONTEND_DOMAIN}/order`,
     "{deliveryAddress}": order.deliveryLocation || "N/A",
     "{items}": order.products
       ? order.products
@@ -137,7 +139,7 @@ export const sendOrderShipped = async (
               `<tr>
                 <td>${item.productName}</td>
                 <td>${item.quantity}</td>
-                <td>$${item.price}</td>
+                <td>₦${item.price}</td>
               </tr>`
           )
           .join("")
@@ -158,5 +160,35 @@ export const sendOrderShipped = async (
   });
 };
 
+export const sendOrderDelivered = async (email: string, order: IOrder) => {
+  const orderDetails: Record<string, any> = {
+    "{orderNumber}": order.id || "N/A",
+    "{deliveryDate}": formatDate(order.updatedAt) || "N/A",
+    "{frontendUrl}": `${process.env.FRONTEND_DOMAIN}/order`,
+  };
+
+  const emailHtml = DELIVERED_ORDER_TEMPLATE.replace(
+    /({\w+})/gi,
+    (match) => orderDetails[match] || match
+  );
+
+  await mailtrapClient.send({
+    from: sender,
+    to: [{ email }],
+    subject: "Order delivered",
+    html: emailHtml,
+    category: "Order delivered",
+  });
+};
+
 const capitalize = (str: string) =>
   str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+
+const formatDate = (dateString: Date) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+  });
+};
