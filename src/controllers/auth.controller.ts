@@ -41,6 +41,7 @@ export const signUp = async (
       userId: newUser._id,
       firstName: newUser.firstName,
       role: newUser.role,
+      isVerified: newUser.isVerified,
     });
   } catch (error) {
     next(error);
@@ -80,6 +81,7 @@ export const signIn = async (
         userId: user._id,
         firstName: user.firstName,
         role: user.role,
+        isVerified: user.isVerified,
       });
       return; // exit code after sending OTP to admin
     }
@@ -93,6 +95,7 @@ export const signIn = async (
       userId: user._id,
       firstName: user.firstName,
       role: user.role,
+      isVerified: user.isVerified,
     });
   } catch (error) {
     next(error);

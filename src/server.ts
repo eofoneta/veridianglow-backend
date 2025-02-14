@@ -11,12 +11,19 @@ import { paymentRoute } from "./routes/payment.route";
 import { paystackWebhook } from "./controllers/payment.controller";
 import { analyticsRoutes } from "./routes/analytics.route";
 import { orderRoute } from "./routes/order.route";
+import cors from "cors";
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT;
 
+app.use(
+  cors({
+    origin: process.env.FRONTEND_DOMAIN,
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
