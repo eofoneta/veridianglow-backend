@@ -56,13 +56,13 @@ export const signIn = async (
   try {
     const { email, password }: { email: string; password: string } = req.body;
     if (!email || !password) {
-      throw new AppError("Please fill in required fields", 401);
+      throw new AppError("Please fill in required fields", 403);
     }
 
     const user = await User.findOne({ email });
 
     if (!user || !(await user.comparePassword(password))) {
-      throw new AppError("Invalid email or password", 401);
+      throw new AppError("Invalid email or password", 403);
     }
 
     if (user.role === "ADMIN") {
@@ -97,36 +97,6 @@ export const signIn = async (
       role: user.role,
       isVerified: user.isVerified,
     });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const logout = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const refreshToken = req.cookies.refreshToken;
-    if (!refreshToken) {
-      throw new AppError("User not logged in", 401);
-    }
-    // jwt was signed with the userId
-    const decoded = jwt.verify(
-      refreshToken,
-      process.env.REFRESH_TOKEN_SECRET!
-    ) as JwtPayload;
-    await redisClient.del(`refreshToken_${decoded.userId}`);
-    await User.findOneAndUpdate(
-      { _id: decoded.userId },
-      { isVerified: false },
-      { new: true }
-    );
-
-    res.clearCookie("accessToken");
-    res.clearCookie("refreshToken");
-    res.json({ message: "User logged out" });
   } catch (error) {
     next(error);
   }
@@ -176,7 +146,9 @@ export const refreshToken = async (
   try {
     const { refreshToken } = req.cookies;
 
-    if (!refreshToken) throw new AppError("refresh token not found", 401);
+    if (!refreshToken) {
+      throw new AppError("refresh token not found", 404);
+    }
 
     const decoded = jwt.verify(
       refreshToken,
@@ -218,7 +190,7 @@ export const forgotPassword = async (
   try {
     const { email } = req.body;
     const user = await User.findOne({ email });
-    if (!user) throw new AppError("User not found", 404);
+    if (!user) return;
 
     const forgotPasswordToken = crypto.randomBytes(32).toString("hex");
     const tokenExpiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1hr
@@ -279,8 +251,45 @@ export const getProfiles = async (
       userId: req.user?._id,
       firstName: req.user?.firstName,
       role: req.user?.role,
+      isVerified: req.user?.isVerified,
     });
   } catch (error) {
     next(error);
   }
+};
+
+export const logout = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      throw new AppError("User not logged in", 401);
+    }
+    // jwt was signed with the userId
+    const decoded = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET!
+    ) as JwtPayload;
+    await redisClient.del(`refreshToken_${decoded.userId}`);
+    await User.findOneAndUpdate(
+      { _id: decoded.userId },
+      { isVerified: false },
+      { new: true }
+    );
+
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+    res.json({ message: "User logged out" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const softLogout = async (req: Request, res: Response) => {
+  res.clearCookie("accessToken");
+  res.clearCookie("refreshToken");
+  res.status(200);
 };

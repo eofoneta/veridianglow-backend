@@ -19,7 +19,7 @@ export const protectedRoute = async (
   try {
     const accessToken = req.cookies.accessToken;
     if (!accessToken) {
-      throw new AppError("User not authenticated: Access token not found", 401);
+      throw new AppError("User not authenticated", 401);
     }
 
     const decoded = jwt.verify(
@@ -29,6 +29,38 @@ export const protectedRoute = async (
     const user = await User.findById(decoded.userId).select("-password");
 
     if (!user) throw new AppError("User not found", 404);
+
+    req.user = user;
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const checkAuth = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const accessToken = req.cookies.accessToken;
+    if (!accessToken) {
+      console.error("Auth Error: User not authenticated");
+      res.end();
+      return;
+    }
+
+    const decoded = jwt.verify(
+      accessToken,
+      process.env.ACCESS_TOKEN_SECRET!
+    ) as JwtPayload;
+    const user = await User.findById(decoded.userId).select("-password");
+
+    if (!user) {
+      console.error("Auth Error: User not found");
+      res.end();
+      return;
+    }
 
     req.user = user;
     next();

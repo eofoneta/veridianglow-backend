@@ -101,6 +101,16 @@ ProductSchema.index(
   { weights: { name: 3, category: 2, description: 1 } }
 );
 
+ProductSchema.pre("save", function (next) {
+  if (this.ratings.length > 0) {
+    this.averageRating =
+      this.ratings.reduce((acc, r) => acc + r.rating, 0) / this.ratings.length;
+  } else {
+    this.averageRating = 0.0;
+  }
+  next();
+});
+
 const Product: Model<IProduct> = mongoose.model<IProduct>(
   "Product",
   ProductSchema

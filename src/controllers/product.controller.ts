@@ -256,7 +256,6 @@ export const getFeaturedProducts = async (
   next: NextFunction
 ) => {
   try {
-    console.log("Ran getFeaturedProducts function");
     let featuredProducts: string | null = await redisClient.get(
       "featured_products"
     );
@@ -278,7 +277,9 @@ export const getFeaturedProducts = async (
 
     await redisClient.set(
       "featured_products",
-      JSON.stringify(featuredProductsArray)
+      JSON.stringify(featuredProductsArray),
+      "EX",
+      900 // 15 minutes
     );
     res.json(featuredProductsArray);
   } catch (error) {
@@ -323,13 +324,13 @@ export const rateProduct = async (
 ) => {
   try {
     const { id } = req.params;
-    const { userId, rating } = req.body;
+    const { rating } = req.body;
 
     if (!rating || rating < 1 || rating > 5) {
       throw new AppError("Rating must be between 1 and 5", 400);
     }
 
-    await updateProductRating(id, userId, rating);
+    await updateProductRating(id, req.user?.id, rating);
     res.json({ message: "Rating submitted successfully." });
   } catch (error) {
     next(error);

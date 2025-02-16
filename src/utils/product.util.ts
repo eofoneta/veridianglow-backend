@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import { NextFunction } from "express";
 import { redisClient } from "../lib/redis";
 import Product from "../models/product.model";
@@ -21,44 +22,30 @@ export const updateFeaturedProductCache = async (next: NextFunction) => {
 
 export const updateProductRating = async (
   id: string,
-  userId: string,
+  userId: Types.ObjectId,
   rating: number
 ) => {
+  if (!id) throw new AppError("Product ID is required", 400);
+  if (!userId) throw new AppError("User ID is required", 400);
+
   const product = await Product.findById(id);
   if (!product) throw new AppError("Product not found", 404);
 
-  // allow only one rating per user
-  const existingRatingIndex = product.ratings.findIndex(
-    (r) => r.userId?.toString() === userId
+  if (!Array.isArray(product.ratings)) {
+    product.ratings = [];
+  }
+
+  // Find if user has already rated
+  const existingRating = product.ratings.find((r) =>
+    r.userId ? r.userId === userId : false
   );
 
-  let updateQuery;
-  if (existingRatingIndex !== -1) {
-    updateQuery = {
-      $set: { "ratings.$[elem].rating": rating },
-    };
+  if (existingRating) {
+    existingRating.rating = rating;
   } else {
-    updateQuery = {
-      $push: { ratings: { userId, rating } },
-    };
+    product.ratings.push({ userId, rating });
   }
 
-  await Product.updateOne({ _id: id }, updateQuery, {
-    arrayFilters: [{ "elem.userId": userId }],
-  });
-
-  await updateAverageRating(id);
-};
-
-const updateAverageRating = async (productId: string) => {
-  const updatedProduct = await Product.findById(productId, "ratings");
-  if (!updatedProduct) {
-    throw new AppError("Failed to update product rating", 500);
-  }
-
-  const totalRatings = updatedProduct.ratings.length;
-  const averageRating =
-    updatedProduct.ratings.reduce((sum, r) => sum + r.rating, 0) / totalRatings;
-
-  await Product.updateOne({ _id: productId }, { $set: { averageRating } });
+  // pre save hook calculates average ratings
+  await product.save();
 };
