@@ -354,6 +354,64 @@ export const recommendedProducts = async (
   }
 };
 
+export const getRelatedProducts = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { category } = req.params;
+
+    if (!category) {
+      throw new AppError("Related products needs a category", 400);
+    }
+
+    const products = await Product.aggregate([
+      { $match: { category: category } },
+      { $sample: { size: 4 } },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          image: 1,
+          price: 1,
+          discountPrice: 1,
+          averageRating: 1,
+          category: 1,
+        },
+      },
+    ]);
+
+    /*
+     * If there are fewer than 4 products in the category, 
+       fill the remaining slots with random products from other categories
+     */
+    if (products.length < 4) {
+      const additionalProducts = await Product.aggregate([
+        { $match: { category: { $ne: category } } },
+        { $sample: { size: 4 - products.length } },
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            image: 1,
+            price: 1,
+            category: 1,
+            discountPrice: 1,
+            averageRating: 1,
+          },
+        },
+      ]);
+
+      products.push(...additionalProducts);
+    }
+
+    res.json(products);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const searchProducts = async (
   req: Request,
   res: Response,

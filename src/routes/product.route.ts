@@ -6,6 +6,7 @@ import {
   getFeaturedProducts,
   getProductByCategory,
   getProductById,
+  getRelatedProducts,
   getTopRatedProducts,
   getUnarchivedProducts,
   rateProduct,
@@ -50,6 +51,7 @@ productRoute.get("/featured", getFeaturedProducts);
 productRoute.get("/archived", getUnarchivedProducts);
 productRoute.get("/top_rated", getTopRatedProducts);
 productRoute.patch("/rate_product/:id", protectedRoute, rateProduct);
-productRoute.patch("/recommended", recommendedProducts);
+productRoute.get("/recommended", recommendedProducts);
+productRoute.get("/related_products/:category", getRelatedProducts);
 productRoute.get("/search", searchProducts);
 productRoute.get("/:id", getProductById);
