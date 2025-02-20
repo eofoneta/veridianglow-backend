@@ -2,10 +2,14 @@ import express from "express";
 import {
   createProduct,
   deleteProduct,
+  getAllKidsProducts,
+  getAllMenProducts,
   getAllProducts,
   getFeaturedProducts,
   getProductByCategory,
   getProductById,
+  getProductsByDifferentCategory,
+  getProductsByMenCategory,
   getRelatedProducts,
   getTopRatedProducts,
   getUnarchivedProducts,
@@ -48,10 +52,20 @@ productRoute.patch(
   toggleArchivedProduct
 );
 productRoute.get("/featured", getFeaturedProducts);
-productRoute.get("/archived", getUnarchivedProducts);
+productRoute.get("/all_unarchived", getUnarchivedProducts);
 productRoute.get("/top_rated", getTopRatedProducts);
 productRoute.patch("/rate_product/:id", protectedRoute, rateProduct);
 productRoute.get("/recommended", recommendedProducts);
+productRoute.get("/men", getAllMenProducts);
+productRoute.get("/kids", getAllKidsProducts);
+productRoute.get(
+  "/different_category/:mainCategory/:otherCategory?", // bro i had to name it this way because man i'm not touching express anymore :(
+  getProductsByDifferentCategory
+);
+productRoute.get(
+  "/men_category/:category",
+  getProductsByMenCategory
+);
 productRoute.get("/related_products/:category", getRelatedProducts);
 productRoute.get("/search", searchProducts);
-productRoute.get("/:id", getProductById);
+productRoute.get("/find_product/:id", getProductById);

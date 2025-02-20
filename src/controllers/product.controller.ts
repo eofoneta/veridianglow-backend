@@ -193,6 +193,10 @@ export const deleteProduct = async (
   }
 };
 
+/**
+ @getProductByCategory Fetch products in two steps to prioritize category match and also 
+ include one's where category matches the name as secondary result
+ */
 export const getProductByCategory = async (
   req: Request,
   res: Response,
@@ -200,8 +204,45 @@ export const getProductByCategory = async (
 ) => {
   try {
     const { category } = req.params;
-    const products = await Product.find({ category });
-    res.json(products);
+    const MAX_LIMIT = 100;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(
+      MAX_LIMIT,
+      Math.max(1, Number(req.query.limit) || 10)
+    );
+    const skip = (page - 1) * limit;
+
+    const categoryRegex = new RegExp(`^${category}$`, "i");
+    const nameRegex = new RegExp(category, "i");
+
+    const [categoryProducts, nameProducts] = await Promise.all([
+      Product.find({ category: categoryRegex, isArchived: false })
+        .skip(skip)
+        .limit(limit),
+      Product.find({
+        name: nameRegex,
+        isArchived: false,
+        category: { $ne: category },
+      })
+        .skip(skip)
+        .limit(limit),
+    ]);
+
+    const products = [...categoryProducts, ...nameProducts].slice(0, limit);
+
+    const totalProducts = await Product.countDocuments({
+      $or: [{ category: categoryRegex }, { name: nameRegex }],
+    });
+
+    res.json({
+      success: true,
+      products,
+      pagination: {
+        totalProducts,
+        currentPage: page,
+        totalPages: Math.ceil(totalProducts / limit),
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -294,8 +335,28 @@ export const getUnarchivedProducts = async (
   next: NextFunction
 ) => {
   try {
-    const archivedProducts = await Product.find({ isArchived: false });
-    res.json(archivedProducts);
+    const MAX_LIMIT = 100;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(
+      MAX_LIMIT,
+      Math.max(1, Number(req.query.limit) || 10)
+    );
+    const skip = (page - 1) * limit;
+
+    const [products, totalProducts] = await Promise.all([
+      Product.find({ isArchived: false }).skip(skip).limit(limit),
+      Product.countDocuments({ isArchived: false }),
+    ]);
+
+    res.json({
+      success: true,
+      products,
+      pagination: {
+        totalProducts,
+        currentPage: page,
+        totalPages: Math.ceil(totalProducts / limit),
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -427,6 +488,166 @@ export const searchProducts = async (
       .sort({ score: { $meta: "textScore" } })
       .limit(20);
     res.json(results);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAllMenProducts = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const MAX_LIMIT = 100;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(
+      MAX_LIMIT,
+      Math.max(1, Number(req.query.limit) || 10)
+    );
+    const skip = (page - 1) * limit;
+
+    const [products, totalProducts] = await Promise.all([
+      Product.find({ isArchived: false, subCategory: "MEN" })
+        .skip(skip)
+        .limit(limit),
+      Product.countDocuments({ isArchived: false, subCategory: "MEN" }),
+    ]);
+
+    res.json({
+      success: true,
+      products,
+      pagination: {
+        totalProducts,
+        currentPage: page,
+        totalPages: Math.ceil(totalProducts / limit),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAllKidsProducts = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const MAX_LIMIT = 100;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(
+      MAX_LIMIT,
+      Math.max(1, Number(req.query.limit) || 10)
+    );
+    const skip = (page - 1) * limit;
+
+    const [products, totalProducts] = await Promise.all([
+      Product.find({ isArchived: false, subCategory: "KIDS" })
+        .skip(skip)
+        .limit(limit),
+      Product.countDocuments({ isArchived: false, subCategory: "KIDS" }),
+    ]);
+
+    res.json({
+      success: true,
+      products,
+      pagination: {
+        totalProducts,
+        currentPage: page,
+        totalPages: Math.ceil(totalProducts / limit),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProductsByDifferentCategory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { mainCategory, otherCategory } = req.params;
+
+    const MAX_LIMIT = 100;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(
+      MAX_LIMIT,
+      Math.max(1, Number(req.query.limit) || 10)
+    );
+    const skip = (page - 1) * limit;
+
+    const mainCategoryRegex = new RegExp(mainCategory, "i");
+    const otherCategoryRegex = otherCategory
+      ? new RegExp(otherCategory, "i")
+      : null;
+
+    let filter: any = {
+      isArchived: false,
+      $or: [{ category: mainCategoryRegex }, { name: mainCategoryRegex }],
+    };
+
+    if (otherCategory) {
+      filter.$or.push({ category: otherCategoryRegex });
+      filter.$or.push({ name: otherCategoryRegex });
+    }
+
+    const products = await Product.find(filter).skip(skip).limit(limit);
+    const totalProducts = await Product.countDocuments(filter);
+
+    res.json({
+      success: true,
+      products,
+      pagination: {
+        totalProducts,
+        currentPage: page,
+        totalPages: Math.ceil(totalProducts / limit),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProductsByMenCategory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { category } = req.params;
+
+    const MAX_LIMIT = 100;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(
+      MAX_LIMIT,
+      Math.max(1, Number(req.query.limit) || 10)
+    );
+    const skip = (page - 1) * limit;
+
+    const searchWords = category.trim().split(/\s+/);
+    const regexArray = searchWords.map((word) => new RegExp(word, "i"));
+
+    let filter: any = {
+      isArchived: false,
+      subCategory: "MEN",
+      $or: [{ category: { $in: regexArray } }, { name: { $in: regexArray } }],
+    };
+
+    const products = await Product.find(filter).skip(skip).limit(limit);
+    const totalProducts = await Product.countDocuments(filter);
+
+    res.json({
+      success: true,
+      products,
+      pagination: {
+        totalProducts,
+        currentPage: page,
+        totalPages: Math.ceil(totalProducts / limit),
+      },
+    });
   } catch (error) {
     next(error);
   }
