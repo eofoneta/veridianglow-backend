@@ -12,6 +12,7 @@ import { paystackWebhook } from "./controllers/payment.controller";
 import { analyticsRoutes } from "./routes/analytics.route";
 import { orderRoute } from "./routes/order.route";
 import cors from "cors";
+import "./lib/cronJob";
 
 dotenv.config();
 

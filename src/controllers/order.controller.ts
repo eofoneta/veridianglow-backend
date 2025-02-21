@@ -82,3 +82,18 @@ export const fetchCustomerFailedOrders = async (
     next(error);
   }
 };
+
+export const getAllCustomerOrder = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const order = await Order.find({ userId: req.user?.id }).sort({
+      createdAt: -1,
+    });
+    res.json(order);
+  } catch (error) {
+    next(error);
+  }
+};

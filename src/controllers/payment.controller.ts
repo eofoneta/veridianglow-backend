@@ -77,6 +77,7 @@ export const initializeCheckout = async (
       tax,
       totalAmount,
       discountedTotal,
+      paid: false,
       status: "PENDING",
     });
 

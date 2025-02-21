@@ -15,7 +15,14 @@ export interface IOrder extends Document {
   estimatedDeliveryDate: Date;
   tax: number;
   totalAmount: number;
-  status: "PENDING" | "PAID" | "FAILED" | "SHIPPED" | "DELIVERED";
+  status:
+    | "PENDING"
+    | "PAID"
+    | "FAILED"
+    | "SHIPPED"
+    | "DELIVERED"
+    | "ABANDONED"
+    | "CANCELED";
   paystackReference: string;
   discountedTotal: number;
   transactionId: string;
@@ -75,7 +82,7 @@ const OrderSchema = new mongoose.Schema<IOrder>(
     tax: { type: Number, required: true },
     status: {
       type: String,
-      enum: ["PENDING", "PAID", "SHIPPED", "DELIVERED", "FAILED"],
+      enum: ["PENDING", "PAID", "SHIPPED", "DELIVERED", "FAILED", "CANCELLED", "ABANDONED"],
       default: "PENDING",
     },
     paystackReference: { type: String, required: true },
