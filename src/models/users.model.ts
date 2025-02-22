@@ -11,7 +11,14 @@ export interface IUser extends Document {
     quantity: number;
     product: Schema.Types.ObjectId;
   }[];
-  wishlist: Schema.Types.ObjectId[];
+  wishlist: {
+    productId: string;
+    name: string;
+    averageRating: number;
+    image: string;
+    price: number;
+    discountPrice: number;
+  }[];
   role: "CUSTOMER" | "ADMIN";
   address: {
     street: string;
@@ -69,8 +76,12 @@ const userSchema = new mongoose.Schema<IUser>(
     ],
     wishlist: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Product",
+        productId: { type: String, required: true },
+        image: { type: String, required: true },
+        name: { type: String, required: true },
+        price: { type: Number },
+        discountPrice: { type: Number, required: true },
+        averageRating: { type: Number, required: true },
       },
     ],
     role: {
