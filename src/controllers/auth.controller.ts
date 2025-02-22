@@ -42,6 +42,7 @@ export const signUp = async (
       firstName: newUser.firstName,
       role: newUser.role,
       isVerified: newUser.isVerified,
+      address: newUser.address,
     });
   } catch (error) {
     next(error);
@@ -96,6 +97,7 @@ export const signIn = async (
       firstName: user.firstName,
       role: user.role,
       isVerified: user.isVerified,
+      address: user.address,
     });
   } catch (error) {
     next(error);
@@ -252,6 +254,7 @@ export const getProfiles = async (
       firstName: req.user?.firstName,
       role: req.user?.role,
       isVerified: req.user?.isVerified,
+      address: req.user?.address,
     });
   } catch (error) {
     next(error);

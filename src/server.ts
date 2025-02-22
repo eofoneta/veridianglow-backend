@@ -13,6 +13,7 @@ import { analyticsRoutes } from "./routes/analytics.route";
 import { orderRoute } from "./routes/order.route";
 import cors from "cors";
 import "./lib/cronJob";
+import { userRoute } from "./routes/user.route";
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ app.use(express.json({ limit: "10mb" })); // check this
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+app.use("/api/user", userRoute);
 app.use("/api/auth", authRoute);
 app.use("/api/product", productRoute);
 app.use("/api/cart", cartRoute);

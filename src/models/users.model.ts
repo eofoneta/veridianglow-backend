@@ -11,14 +11,15 @@ export interface IUser extends Document {
     quantity: number;
     product: Schema.Types.ObjectId;
   }[];
+  wishlist: Schema.Types.ObjectId[];
   role: "CUSTOMER" | "ADMIN";
-  addresses: {
+  address: {
     street: string;
     city: string;
     state: string;
     country: string;
     zipCode: string;
-  }[];
+  };
   comparePassword: (password: string) => Promise<boolean>;
   lastLogin: Date;
   isVerified: Boolean;
@@ -66,35 +67,40 @@ const userSchema = new mongoose.Schema<IUser>(
         },
       },
     ],
+    wishlist: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+      },
+    ],
     role: {
       type: String,
       enum: ["CUSTOMER", "ADMIN"],
       default: "CUSTOMER",
     },
-    addresses: [
-      {
-        street: {
-          type: String,
-          required: true,
-        },
-        city: {
-          type: String,
-          required: true,
-        },
-        state: {
-          type: String,
-          required: true,
-        },
-        country: {
-          type: String,
-          required: true,
-        },
-        zipCode: {
-          type: String,
-          required: true,
-        },
+    address: {
+      street: {
+        type: String,
+        required: true,
       },
-    ],
+      city: {
+        type: String,
+        required: true,
+      },
+      state: {
+        type: String,
+        required: true,
+      },
+      country: {
+        type: String,
+        required: true,
+      },
+      zipCode: {
+        type: String,
+        required: true,
+      },
+    },
+
     lastLogin: {
       type: Date,
     },
