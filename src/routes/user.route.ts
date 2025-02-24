@@ -14,6 +14,6 @@ export const userRoute = express.Router();
 userRoute.post("/address", protectedRoute, addAddress);
 userRoute.put("/edit/address", protectedRoute, editAddress);
 userRoute.get("/address", checkAuth, getAddress);
-userRoute.get("/wishlist", protectedRoute, getWishlists);
+userRoute.get("/wishlist", checkAuth, getWishlists);
 userRoute.post("/wishlist", protectedRoute, addToWishlist);
-userRoute.delete("/wishlist/:productId", protectedRoute, removeFromWishList); 
+userRoute.delete("/wishlist/:productId", protectedRoute, removeFromWishList);

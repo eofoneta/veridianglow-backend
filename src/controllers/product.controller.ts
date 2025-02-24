@@ -479,15 +479,34 @@ export const searchProducts = async (
   next: NextFunction
 ) => {
   try {
+    const MAX_LIMIT = 100;
     const search = req.query.search as string;
     if (!search) throw new AppError("Search query is required", 400);
 
-    const results = await Product.find({
-      $text: { $search: search },
-    })
-      .sort({ score: { $meta: "textScore" } })
-      .limit(20);
-    res.json(results);
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(
+      MAX_LIMIT,
+      Math.max(1, Number(req.query.limit) || 10)
+    );
+    const skip = (page - 1) * limit;
+
+    const [results, totalProducts] = await Promise.all([
+      Product.find({ $text: { $search: search } })
+        .sort({ score: { $meta: "textScore" } })
+        .skip(skip)
+        .limit(limit),
+      Product.countDocuments({ $text: { $search: search } }),
+    ]);
+
+    res.json({
+      success: true,
+      products: results,
+      pagination: {
+        totalProducts,
+        currentPage: page,
+        totalPages: Math.ceil(totalProducts / limit),
+      },
+    });
   } catch (error) {
     next(error);
   }
