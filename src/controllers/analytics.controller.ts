@@ -7,10 +7,17 @@ export const getAnalytics = async (
   next: NextFunction
 ) => {
   try {
-    const { startDateValue }: { startDateValue: number } = req.body;
-    const analyticsData = await getAnalyticsData(next);
+    let { startDateValue }: { startDateValue?: number } = req.body;
+
+    if (!startDateValue || isNaN(startDateValue)) {
+      startDateValue = 30 * 24 * 60 * 60 * 1000;
+    }
+
     const endDate = new Date();
-    const startDate = new Date(endDate.getTime() - startDateValue);
+    const startDate = new Date(endDate);
+    startDate.setTime(endDate.getTime() - startDateValue);
+
+    const analyticsData = await getAnalyticsData(next);
     const dailySalesData = await getDailySalesData(startDate, endDate, next);
 
     res.json({

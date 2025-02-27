@@ -74,7 +74,6 @@ const userSchema = new mongoose.Schema<IUser>(
         },
         id: {
           type: String,
-          // ref: "Product",
           required: true,
         },
         name: {

@@ -100,6 +100,13 @@ export const getDailySalesData = async (
 
 const getDateInrange = (startDate: Date, endDate: Date, next: NextFunction) => {
   try {
+    if (!(startDate instanceof Date) || isNaN(startDate.getTime())) {
+      throw new Error("Invalid startDate");
+    }
+    if (!(endDate instanceof Date) || isNaN(endDate.getTime())) {
+      throw new Error("Invalid endDate");
+    }
+
     const dates = [];
     let currentDate = new Date(startDate);
 

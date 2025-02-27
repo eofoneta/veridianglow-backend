@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { redisClient } from "../lib/redis";
 import { Response } from "express";
+import { v4 as uuidv4 } from "uuid";
 dotenv.config();
 
 export const generateTokens = (userId: Types.ObjectId | unknown) => {
@@ -21,7 +22,10 @@ export const storeRefreshToken = async (
   userId: Types.ObjectId | unknown,
   refreshToken: string
 ) => {
-  await redisClient.set(`refreshToken_${userId}`, refreshToken);
+  const sessionId = uuidv4(); // Generate unique session ID
+  const key = `refreshToken_${userId}_${sessionId}`;
+
+  await redisClient.set(key, refreshToken, "EX", 604800); // 7 days
 };
 
 export const setCookies = (

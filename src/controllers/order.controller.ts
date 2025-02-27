@@ -23,9 +23,9 @@ export const updateDeliveryStatus = async (
     );
 
     if (order?.status === "SHIPPED") {
-      sendOrderShipped(order.email, order);
+      await sendOrderShipped(order.email, order);
     } else if (order?.status === "DELIVERED") {
-      sendOrderDelivered(order.email, order);
+      await sendOrderDelivered(order.email, order);
     }
 
     res.json({
@@ -93,6 +93,43 @@ export const getAllCustomerOrder = async (
       createdAt: -1,
     });
     res.json(order);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAllOrders = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const MAX_LIMIT = 100;
+    const page = Number(req.query.page);
+    const limit = Number(req.query.limit);
+
+    const validPage = Number.isInteger(page) && page > 0 ? page : 1;
+    const validLimit =
+      Number.isInteger(limit) && limit > 0 ? Math.min(limit, MAX_LIMIT) : 10;
+
+    const skip = (validPage - 1) * validLimit;
+
+    const filter = { paid: true };
+
+    const [orders, totalOrders] = await Promise.all([
+      Order.find(filter).sort({ createdAt: -1 }).skip(skip).limit(validLimit),
+      Order.countDocuments(filter),
+    ]);
+
+    res.json({
+      success: true,
+      orders,
+      pagination: {
+        totalOrders,
+        currentPage: validPage,
+        totalPages: Math.ceil(totalOrders / validLimit),
+      },
+    });
   } catch (error) {
     next(error);
   }

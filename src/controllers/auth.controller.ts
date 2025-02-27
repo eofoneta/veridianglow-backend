@@ -28,7 +28,7 @@ export const signUp = async (
     }
 
     const userExists = await User.findOne({ email });
-    if (userExists) throw new AppError("Email already exists", 400);
+    if (userExists) throw new AppError("User already exists", 400);
 
     const newUser = await User.create({ firstName, lastName, email, password });
 
@@ -40,6 +40,7 @@ export const signUp = async (
       status: "success",
       userId: newUser._id,
       firstName: newUser.firstName,
+      lastName: newUser.lastName,
       role: newUser.role,
       isVerified: newUser.isVerified,
       address: newUser.address,
@@ -57,13 +58,13 @@ export const signIn = async (
   try {
     const { email, password }: { email: string; password: string } = req.body;
     if (!email || !password) {
-      throw new AppError("Please fill in required fields", 403);
+      throw new AppError("Please fill in required fields", 400);
     }
 
     const user = await User.findOne({ email });
 
     if (!user || !(await user.comparePassword(password))) {
-      throw new AppError("Invalid email or password", 403);
+      throw new AppError("Invalid email or password", 401);
     }
 
     if (user.role === "ADMIN") {
@@ -81,6 +82,7 @@ export const signIn = async (
         message: "OTP sent for admin verification",
         userId: user._id,
         firstName: user.firstName,
+        lastName: user.lastName,
         role: user.role,
         isVerified: user.isVerified,
       });
@@ -95,6 +97,7 @@ export const signIn = async (
       status: "success",
       userId: user._id,
       firstName: user.firstName,
+      lastName: user.lastName,
       role: user.role,
       isVerified: user.isVerified,
       address: user.address,
@@ -132,6 +135,7 @@ export const verifyEmail = async (
       mesage: "Email verified successfully",
       userId: user._id,
       firstName: user.firstName,
+      lastName: user.lastName,
       role: user.role,
       isVerified: user.isVerified,
     });
@@ -147,21 +151,19 @@ export const refreshToken = async (
 ) => {
   try {
     const { refreshToken } = req.cookies;
-
-    if (!refreshToken) {
-      throw new AppError("refresh token not found", 404);
-    }
+    if (!refreshToken) throw new AppError("Refresh token not found", 404);
 
     const decoded = jwt.verify(
       refreshToken,
       process.env.REFRESH_TOKEN_SECRET!
     ) as JwtPayload;
 
-    const storedRefreshToken = await redisClient.get(
-      `refreshToken_${decoded.userId}`
+    const keys = await redisClient.keys(`refreshToken_${decoded.userId}_*`);
+    const storedTokens = await Promise.all(
+      keys.map((key) => redisClient.get(key))
     );
 
-    if (refreshToken !== storedRefreshToken) {
+    if (!storedTokens.includes(refreshToken)) {
       throw new AppError("Invalid refresh token", 401);
     }
 
@@ -179,6 +181,8 @@ export const refreshToken = async (
       sameSite: "strict",
       secure: process.env.NODE_ENV === "production",
     });
+
+    res.json({ accessToken });
   } catch (error) {
     next(error);
   }
@@ -252,6 +256,7 @@ export const getProfiles = async (
     res.json({
       userId: req.user?._id,
       firstName: req.user?.firstName,
+      lastName: req.user?.lastName,
       role: req.user?.role,
       isVerified: req.user?.isVerified,
       address: req.user?.address,
@@ -268,15 +273,16 @@ export const logout = async (
 ) => {
   try {
     const refreshToken = req.cookies.refreshToken;
-    if (!refreshToken) {
-      throw new AppError("User not logged in", 401);
-    }
-    // jwt was signed with the userId
+    if (!refreshToken) throw new AppError("User not logged in", 401);
+
     const decoded = jwt.verify(
       refreshToken,
       process.env.REFRESH_TOKEN_SECRET!
     ) as JwtPayload;
-    await redisClient.del(`refreshToken_${decoded.userId}`);
+
+    const keys = await redisClient.keys(`refreshToken_${decoded.userId}_*`);
+    await Promise.all(keys.map((key) => redisClient.del(key)));
+
     await User.findOneAndUpdate(
       { _id: decoded.userId },
       { isVerified: false },
@@ -285,7 +291,7 @@ export const logout = async (
 
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
-    res.json({ message: "User logged out" });
+    res.json({ message: "User logged out from all devices" });
   } catch (error) {
     next(error);
   }

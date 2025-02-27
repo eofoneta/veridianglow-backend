@@ -46,7 +46,7 @@ export const checkAuth = async (
     const accessToken = req.cookies.accessToken;
     if (!accessToken) {
       console.error("Auth Error: User not authenticated");
-      res.end();
+      res.sendStatus(401);
       return;
     }
 
@@ -58,7 +58,7 @@ export const checkAuth = async (
 
     if (!user) {
       console.error("Auth Error: User not found");
-      res.end();
+      res.sendStatus(404);
       return;
     }
 

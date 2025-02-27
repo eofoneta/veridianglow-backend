@@ -6,6 +6,7 @@ import { AppError } from "../error/GlobalErrorHandler";
 import { ObjectId } from "mongoose";
 import Product from "../models/product.model";
 import { sendOrderReceivedEmail } from "../email/emailService";
+import { CheckoutDetails } from "../controllers/payment.controller";
 
 export interface PaystackEvent {
   event: string;
@@ -28,7 +29,13 @@ export interface PaystackEvent {
         quantity: string; // metadata returns it as string
         price: number;
       }[];
-      location: string;
+      location: {
+        street: string;
+        city: string;
+        state: string;
+        country: string;
+        zipCode: string;
+      };
       orderId: string;
       firstName: string;
       userId: string;
@@ -118,7 +125,6 @@ export const handleChargeSuccess = async (event: PaystackEvent) => {
     {
       paid: true,
       status: "PAID",
-      deliveryLocation: metadata.location,
       estimatedDeliveryDate: metadata.estimatedDeliveryDate,
       email: customer.email,
       amountPaid: amount / 100,
@@ -185,4 +191,24 @@ export const applyCoupon = async (
   }
 
   return calculateDiscountedTotal(coupon.discountPercentage, subtotal);
+};
+
+export const validateProducts = async (
+  products: CheckoutDetails["products"]
+): Promise<void> => {
+  for (const item of products) {
+    const product = await Product.findById(item.productId);
+    if (!product) {
+      throw new AppError(`Product '${item.productName}' is not valid`, 400);
+    }
+
+    if (item.quantity > product.stock) {
+      throw new AppError(
+        `Insufficient stock for '${item.productName}'. ${
+          product.stock === 0 ? "there's " : "Only"
+        } ${product.stock === 0 ? "none" : product.stock} left.`,
+        400
+      );
+    }
+  }
 };

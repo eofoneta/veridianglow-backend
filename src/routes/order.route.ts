@@ -5,10 +5,13 @@ import {
   fetchCustomerPaidOrders,
   fetchOrderByStatus,
   getAllCustomerOrder,
+  getAllOrders,
   updateDeliveryStatus,
 } from "../controllers/order.controller";
 
 export const orderRoute = express.Router();
+
+orderRoute.get("/", protectedRoute, adminRoute, getAllOrders);
 
 orderRoute.patch(
   "/update_status/:orderId",
@@ -19,6 +22,7 @@ orderRoute.patch(
 orderRoute.post("/status", protectedRoute, adminRoute, fetchOrderByStatus);
 orderRoute.get(
   "/customer_paid_orders",
+  adminRoute,
   protectedRoute,
   fetchCustomerPaidOrders
 );
@@ -27,8 +31,4 @@ orderRoute.get(
   protectedRoute,
   fetchCustomerFailedOrders
 );
-orderRoute.get(
-  "/get_all_customer_order",
-  protectedRoute,
-  getAllCustomerOrder
-);
+orderRoute.get("/get_all_customer_order", protectedRoute, getAllCustomerOrder);

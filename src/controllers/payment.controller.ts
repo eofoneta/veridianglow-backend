@@ -9,6 +9,7 @@ import {
   handleChargeSuccess,
   PaystackEvent,
   validatePaystackWebhook,
+  validateProducts,
 } from "../utils/payment.util";
 import { ObjectId } from "mongoose";
 import { AppError } from "../error/GlobalErrorHandler";
@@ -17,16 +18,24 @@ import dotenv from "dotenv";
 import { createCoupon } from "../utils/coupon.util";
 dotenv.config();
 
-type CheckoutDetails = {
+export type CheckoutDetails = {
   userId: ObjectId;
+  phoneNumber: string;
   products: {
     productName: string;
     productId: ObjectId;
     quantity: number;
     price: number;
-  };
+  }[];
   couponCode: string | undefined;
-  location: string;
+  orderNote: string | undefined;
+  location: {
+    street: string;
+    city: string;
+    state: string;
+    country: string;
+    zipCode: string;
+  };
   email: string;
   currency: "NGN";
 };
@@ -42,6 +51,8 @@ export const initializeCheckout = async (
       location,
       currency = "NGN",
       couponCode,
+      orderNote,
+      phoneNumber,
     }: CheckoutDetails = req.body;
 
     const userId = req.user?.id;
@@ -50,17 +61,34 @@ export const initializeCheckout = async (
       throw new AppError("Invalid or empty products", 400);
     }
 
+    if (
+      !location ||
+      typeof location !== "object" ||
+      !location.street ||
+      !location.city ||
+      !location.state ||
+      !location.country ||
+      !location.zipCode
+    ) {
+      throw new AppError(
+        "Invalid location. Please provide full address details.",
+        400
+      );
+    }
+
+    await validateProducts(products);
+
     const subtotal = products.reduce(
       (acc, item) => acc + item.price * item.quantity,
       0
     );
-    const amount = calculateTotal(subtotal, location);
+    const amount = calculateTotal(subtotal, location.state);
     /**
      * tax and delivery have been calculated in calculateTotal function
      * these two are information for metadata
      */
     const tax = calculateTax(amount);
-    const deliveryFee = getDeliveryFee(location);
+    const deliveryFee = getDeliveryFee(location.state);
 
     let discountedTotal = 0;
     if (couponCode) {
@@ -71,7 +99,11 @@ export const initializeCheckout = async (
 
     const order = new Order({
       userId,
+      phoneNumber,
+      deliveryLocation: location,
+      fullName: `${req.user?.firstName} ${req.user?.lastName}`,
       products,
+      orderNote: orderNote ?? undefined,
       subtotal,
       deliveryFee,
       tax,
@@ -88,6 +120,8 @@ export const initializeCheckout = async (
       metadata: {
         orderId: order.id,
         firstName: req.user?.firstName,
+        fullName: `${req.user?.firstName} ${req.user?.lastName}`,
+        phoneNumber: order.phoneNumber,
         couponCode: couponCode,
         userId,
         products: order.products,
@@ -101,7 +135,8 @@ export const initializeCheckout = async (
     });
 
     if (!paystackResponse.status || !paystackResponse.data?.reference) {
-      throw new AppError("Error validating trasaction", 400);
+      console.error(paystackResponse);
+      throw new AppError("Error validating transaction", 400);
     }
 
     order.paystackReference = paystackResponse.data?.reference;
@@ -112,7 +147,7 @@ export const initializeCheckout = async (
       await order.save();
 
     // create a free coupon for purchase over 200_000
-    if (totalAmount > 200000) {
+    if (totalAmount > 200_000) {
       await createCoupon(userId, 10);
     }
 

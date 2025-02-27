@@ -4,4 +4,9 @@ import { getAnalytics } from "../controllers/analytics.controller";
 
 export const analyticsRoutes = express.Router();
 
-analyticsRoutes.post("/", protectedRoute, adminRoute, getAnalytics);
+analyticsRoutes.post(
+  "/",
+//   protectedRoute,
+  //  adminRoute,
+  getAnalytics
+);

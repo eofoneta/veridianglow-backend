@@ -15,7 +15,7 @@ export const getAllProducts = async (
   next: NextFunction
 ) => {
   try {
-    const products = await Product.find({});
+    const products = await Product.find({}).sort({ createdAt: -1 });
     res.json(products);
   } catch (error) {
     next(error);
@@ -154,7 +154,7 @@ export const updateProduct = async (
 
     res.json({
       message: "Product updated successfully",
-      data: updatedProduct,
+      updatedProduct,
     });
   } catch (error) {
     next(error);
@@ -258,13 +258,12 @@ export const toggleFeaturedProduct = async (
     const product = await Product.findById(id);
     if (!product) throw new AppError("Product not found", 404);
 
-    await product.updateOne({
-      isFeatured: !product.isFeatured,
-      isArchived: product.isFeatured ? false : product.isArchived,
-    });
+    product.isFeatured = !product.isFeatured;
     await updateFeaturedProductCache(next);
+    const updatedProduct = await product.save();
     res.json({
       success: true,
+      isFeatured: updatedProduct.isFeatured,
     });
   } catch (error) {
     next(error);
@@ -279,12 +278,13 @@ export const toggleArchivedProduct = async (
   try {
     const { id } = req.params;
     const product = await Product.findById(id);
-
     if (!product) throw new AppError("Product not found", 404);
 
-    await product.updateOne({ isArchived: !product.isArchived });
+    product.isArchived = !product.isArchived;
+    const updatedProduct = await product.save();
     res.json({
       success: true,
+      isArchived: updatedProduct.isArchived,
     });
   } catch (error) {
     next(error);

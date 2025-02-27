@@ -146,3 +146,17 @@ export const getWishlist = async (
     next(error);
   }
 };
+
+export const getAllUsers = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const users = await User.find({}, "firstName lastName email");
+
+    res.json({ users });
+  } catch (error) {
+    next(error);
+  }
+};

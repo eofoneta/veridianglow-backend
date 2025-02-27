@@ -25,7 +25,7 @@ export const generateCoupon = async (
 
     const coupon = await createCoupon(user.id, discountPercentage);
     res.json({
-      sucess: true,
+      success: true,
       coupon: coupon.code,
       discountPercentage: coupon.discountPercentage,
       expiresAt: coupon.expirationDate,
