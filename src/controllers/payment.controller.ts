@@ -197,11 +197,6 @@ export const initializeCheckout = async (
       // assigning this might not be important
       await order.save();
 
-    // create a free coupon for purchase over 200_000
-    if (totalAmount > 200_000) {
-      await createCoupon(userId, 10);
-    }
-
     res.status(paystackResponse.status ? 200 : 400).json({
       orderId: order.id,
       paystackResponse,

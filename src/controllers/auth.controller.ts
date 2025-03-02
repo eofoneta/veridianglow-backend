@@ -64,7 +64,7 @@ export const signIn = async (
     const user = await User.findOne({ email });
 
     if (!user || !(await user.comparePassword(password))) {
-      throw new AppError("Invalid email or password", 401);
+      throw new AppError("Invalid email or password", 422);
     }
 
     if (user.role === "ADMIN") {

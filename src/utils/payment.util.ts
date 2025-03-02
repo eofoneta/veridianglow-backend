@@ -7,6 +7,8 @@ import { ObjectId } from "mongoose";
 import Product from "../models/product.model";
 import { sendOrderReceivedEmail } from "../email/emailService";
 import { CheckoutDetails } from "../controllers/payment.controller";
+import { createCoupon } from "./coupon.util";
+import { Types } from "mongoose";
 
 export interface PaystackEvent {
   event: string;
@@ -38,7 +40,7 @@ export interface PaystackEvent {
       };
       orderId: string;
       firstName: string;
-      userId: string;
+      userId: Types.ObjectId;
       couponCode: string;
       deliveryFee: number;
       discount: number;
@@ -151,6 +153,13 @@ export const handleChargeSuccess = async (event: PaystackEvent) => {
 
   await sendOrderReceivedEmail(customer.email, event);
   await Product.bulkWrite(bulkOperations);
+  const amountPaid = amount / 100;
+  // create a free coupon for purchase over 100_000
+  if (amountPaid > 100_000) {
+    const coupon = await createCoupon(metadata.userId, 10);
+    console.log("Coupon generated", coupon.code);
+  }
+
   console.log(
     `✅ Payment received: ${customer.email} paid ${
       amount / 100
