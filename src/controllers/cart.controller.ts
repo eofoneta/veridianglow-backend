@@ -8,6 +8,7 @@ interface CartItem {
   name: string;
   image: string;
   price: number;
+  stock: number;
   category: string;
   discountPrice: number;
   quantity: number;
@@ -135,6 +136,9 @@ export const syncCartToDatabase = async (
 
     for (const newItem of cartItems) {
       const product = await Product.findById(newItem.id);
+      if (product && product.stock !== newItem.stock) {
+        newItem.stock = product.stock;
+      }
       if (product && product.discountPrice !== newItem.discountPrice) {
         newItem.discountPrice = product.discountPrice;
         newItem.total = newItem.quantity * product.discountPrice;
