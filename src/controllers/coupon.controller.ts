@@ -42,13 +42,13 @@ export const getCoupon = async (
   next: NextFunction
 ) => {
   try {
-    const coupoun = await Coupon.find({
+    const coupon = await Coupon.find({
       userId: req.user?._id,
       isActive: true,
     });
-    if (!coupoun) throw new AppError("No coupon found", 404);
+    if (!coupon) throw new AppError("No coupon found", 404);
 
-    res.json(coupoun);
+    res.json(coupon);
   } catch (error) {
     next(error);
   }

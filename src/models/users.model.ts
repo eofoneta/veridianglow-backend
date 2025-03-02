@@ -30,6 +30,7 @@ export interface IUser extends Document {
     city: string;
     state: string;
     country: string;
+    buildingType?: string;
     zipCode: string;
   };
   comparePassword: (password: string) => Promise<boolean>;
@@ -138,6 +139,7 @@ const userSchema = new mongoose.Schema<IUser>(
         type: String,
         required: true,
       },
+      buildingType: { type: String },
     },
 
     lastLogin: {

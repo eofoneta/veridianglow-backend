@@ -8,8 +8,8 @@ import {
   getDeliveryFee,
   handleChargeSuccess,
   PaystackEvent,
+  validateCredentials,
   validatePaystackWebhook,
-  validateProducts,
 } from "../utils/payment.util";
 import { ObjectId } from "mongoose";
 import { AppError } from "../error/GlobalErrorHandler";
@@ -18,71 +18,77 @@ import dotenv from "dotenv";
 import { createCoupon } from "../utils/coupon.util";
 dotenv.config();
 
-export type CheckoutDetails = {
-  userId: ObjectId;
-  phoneNumber: string;
-  products: {
-    productName: string;
-    productId: ObjectId;
-    quantity: number;
-    price: number;
-  }[];
-  couponCode: string | undefined;
-  orderNote: string | undefined;
+interface CalculateOrder {
   location: {
     street: string;
     city: string;
     state: string;
     country: string;
     zipCode: string;
+    buildingType?: string;
   };
-  email: string;
+  couponCode: string | undefined;
+  phoneNumber: string;
+}
+
+export type CheckoutDetails = {
+  phoneNumber: string;
+  products: {
+    productName: string;
+    productId: string;
+    quantity: number;
+    price: number;
+  }[];
+  couponCode?: string;
+  orderNote?: string;
+  location: {
+    street: string;
+    city: string;
+    state: string;
+    country: string;
+    zipCode: string;
+    buildingType?: string;
+  };
   currency: "NGN";
+  subtotal: number;
+  deliveryFee: number;
+  tax: number;
+  totalAmount: number;
+  discountedTotal: number;
 };
 
-export const initializeCheckout = async (
+export const calculateOrderDetails = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const {
-      products,
-      location,
-      currency = "NGN",
-      couponCode,
-      orderNote,
-      phoneNumber,
-    }: CheckoutDetails = req.body;
+    const { location, couponCode, phoneNumber }: CalculateOrder = req.body;
 
     const userId = req.user?.id;
+    const email = req.user?.email;
 
-    if (!Array.isArray(products) || !products.length) {
-      throw new AppError("Invalid or empty products", 400);
-    }
+    const products = req.user?.cartItems.map((item) => ({
+      productName: item.name,
+      productId: item.id,
+      quantity: item.quantity,
+      price: item.discountPrice, // this is the default selling price
+    }));
 
-    if (
-      !location ||
-      typeof location !== "object" ||
-      !location.street ||
-      !location.city ||
-      !location.state ||
-      !location.country ||
-      !location.zipCode
-    ) {
+    if (!products?.length)
       throw new AppError(
-        "Invalid location. Please provide full address details.",
+        "Cart is empty. Please add items before checking out",
         400
       );
-    }
 
-    await validateProducts(products);
+    await validateCredentials(products, location, phoneNumber);
 
     const subtotal = products.reduce(
       (acc, item) => acc + item.price * item.quantity,
       0
     );
     const amount = calculateTotal(subtotal, location.state);
+
     /**
      * tax and delivery have been calculated in calculateTotal function
      * these two are information for metadata
@@ -97,8 +103,49 @@ export const initializeCheckout = async (
 
     const totalAmount = amount - discountedTotal;
 
+    res.json({
+      subtotal,
+      tax,
+      deliveryFee,
+      discountedTotal,
+      totalAmount,
+      email,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const initializeCheckout = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const {
+      location,
+      currency = "NGN",
+      couponCode,
+      orderNote,
+      phoneNumber,
+      subtotal,
+      deliveryFee,
+      tax,
+      totalAmount,
+      discountedTotal,
+    }: CheckoutDetails = req.body;
+
+    const userId = req.user?.id;
+    const products = req.user?.cartItems.map((item) => ({
+      productName: item.name,
+      productId: item.id,
+      quantity: item.quantity,
+      price: item.discountPrice, // this is the default selling price
+    }));
+
     const order = new Order({
       userId,
+      email: req.user?.email,
       phoneNumber,
       deliveryLocation: location,
       fullName: `${req.user?.firstName} ${req.user?.lastName}`,
@@ -132,11 +179,15 @@ export const initializeCheckout = async (
         discountedTotal,
         estimatedDeliveryDate: new Date().setDate(new Date().getDate() + 3), // this is a fixed date and should NOT be used in production
       },
+      callback_url: `${process.env.FRONTEND_DOMAIN}/payment/verify-payment`,
     });
 
     if (!paystackResponse.status || !paystackResponse.data?.reference) {
       console.error(paystackResponse);
-      throw new AppError("Error validating transaction", 400);
+      throw new AppError(
+        "Payment initialization failed. Please try again.",
+        400
+      );
     }
 
     order.paystackReference = paystackResponse.data?.reference;
@@ -151,8 +202,11 @@ export const initializeCheckout = async (
       await createCoupon(userId, 10);
     }
 
-    res.status(paystackResponse.status ? 200 : 400).json(paystackResponse);
-  } catch (error: any) {
+    res.status(paystackResponse.status ? 200 : 400).json({
+      orderId: order.id,
+      paystackResponse,
+    });
+  } catch (error) {
     next(error);
   }
 };
@@ -188,6 +242,7 @@ export const verifyPayment = async (
     res.json({
       status: paystackResponse.data?.status,
       gatewayResponse: paystackResponse.data?.gateway_response,
+      orderId: paystackResponse.data?.metadata.orderId,
     });
   } catch (error) {
     next(error);

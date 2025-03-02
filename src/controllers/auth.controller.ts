@@ -257,6 +257,7 @@ export const getProfiles = async (
       userId: req.user?._id,
       firstName: req.user?.firstName,
       lastName: req.user?.lastName,
+      email: req.user?.email,
       role: req.user?.role,
       isVerified: req.user?.isVerified,
       address: req.user?.address,

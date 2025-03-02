@@ -133,6 +133,14 @@ export const syncCartToDatabase = async (
       cartItems.some((newItem) => newItem.id === item.id)
     );
 
+    for (const newItem of cartItems) {
+      const product = await Product.findById(newItem.id);
+      if (product && product.discountPrice !== newItem.discountPrice) {
+        newItem.discountPrice = product.discountPrice;
+        newItem.total = newItem.quantity * product.discountPrice;
+      }
+    }
+
     cartItems.forEach((newItem) => {
       const existingItemIndex = user.cartItems.findIndex(
         (item) => item.id === newItem.id
@@ -146,7 +154,7 @@ export const syncCartToDatabase = async (
       }
     });
 
-    await user.save();
+    await user.save({ validateBeforeSave: false });
 
     res.status(200).json({
       success: true,

@@ -117,6 +117,7 @@ const OrderSchema = new mongoose.Schema<IOrder>(
     currency: String,
     paymentMethod: String,
     transactionDate: Date,
+    transactionId: String,
     gatewayResponse: String,
     paystackFees: String,
     deliveryLocation: {

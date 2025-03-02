@@ -10,7 +10,7 @@ export const addAddress = async (
 ) => {
   try {
     const userId = req.user?.id;
-    const { street, city, state, zipCode, country } = req.body;
+    const { street, city, state, zipCode, country, buildingType } = req.body;
 
     if (!street || !city || !state || !zipCode || !country) {
       throw new AppError("All fields are required", 400);
@@ -19,7 +19,7 @@ export const addAddress = async (
     const user = await User.findById(userId);
     if (!user) throw new AppError("user not found", 404);
 
-    user.address = { street, city, state, zipCode, country };
+    user.address = { street, city, state, zipCode, country, buildingType };
     await user.save();
 
     res
@@ -37,7 +37,7 @@ export const editAddress = async (
 ) => {
   try {
     const userId = req.user?.id;
-    const { street, city, state, zipCode, country } = req.body;
+    const { street, city, state, zipCode, country, buildingType } = req.body;
 
     if (!street || !city || !state || !zipCode || !country) {
       throw new AppError("All address fields are required", 400);
@@ -45,7 +45,7 @@ export const editAddress = async (
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { address: { street, city, state, zipCode, country } },
+      { address: { street, city, state, zipCode, country, buildingType } },
       { new: true, runValidators: true }
     );
 
@@ -67,6 +67,7 @@ export const getAddress = async (
 ) => {
   try {
     res.json({
+      message: "User address loaded successfully",
       address: req.user?.address,
     });
   } catch (error) {

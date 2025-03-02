@@ -87,7 +87,7 @@ export const getProductById = async (
       throw new AppError("Invalid product ID format", 400);
     }
 
-    const product = await Product.findOne({ _id: id, isArchived: false });
+    const product = await Product.findOne({ _id: id });
     if (!product) throw new AppError("Product not found", 404);
 
     const newStockStatus = product.stock === 0;

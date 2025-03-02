@@ -37,3 +37,21 @@ cron.schedule("0 * * * *", async () => {
     console.error("❌ Error updating abandoned orders:", error);
   }
 });
+
+
+// Schedule a job to run every Sunday at midnight
+cron.schedule("0 0 * * 0", async () => {
+  try {
+    console.log("🗑️ Deleting abandoned orders...");
+
+    const deletedOrders = await Order.deleteMany({ status: "ABANDONED" });
+
+    if (deletedOrders.deletedCount > 0) {
+      console.log(`✅ Deleted ${deletedOrders.deletedCount} abandoned orders.`);
+    } else {
+      console.log("✅ No abandoned orders to delete.");
+    }
+  } catch (error) {
+    console.error("❌ Error deleting abandoned orders:", error);
+  }
+});

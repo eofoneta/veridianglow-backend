@@ -68,13 +68,14 @@ export const getDeliveryFee = (location: string): number => {
 };
 
 export const convertToNaira = (amount: number): string => {
-  const nairaRate = amount * 100;
+  const nairaRate = Math.round(Number(amount) * 100);
   return nairaRate.toString();
 };
 
 export const calculateTax = (subtotal: number): number => {
-  const taxRate = 0.075; // 7.5% VAT FOR NIGERIA
-  return subtotal * taxRate;
+  // const taxRate = 0.075; // 7.5% VAT FOR NIGERIA
+  // return subtotal * taxRate;
+  return 0; // no tax added for now
 };
 
 export const calculateTotal = (subtotal: number, location: string): number => {
@@ -140,6 +141,7 @@ export const handleChargeSuccess = async (event: PaystackEvent) => {
   /**
    * @bulkOperations Reduce stock by purchased quantity
    */
+  console.log("Meta data response", metadata);
   const bulkOperations = metadata.products.map((product) => ({
     updateOne: {
       filter: { _id: product.productId },
@@ -193,9 +195,15 @@ export const applyCoupon = async (
   return calculateDiscountedTotal(coupon.discountPercentage, subtotal);
 };
 
-export const validateProducts = async (
-  products: CheckoutDetails["products"]
+export const validateCredentials = async (
+  products: CheckoutDetails["products"],
+  location: CheckoutDetails["location"],
+  phoneNumber: CheckoutDetails["phoneNumber"]
 ): Promise<void> => {
+  if (!Array.isArray(products) || !products.length) {
+    throw new AppError("Invalid or empty products", 400);
+  }
+
   for (const item of products) {
     const product = await Product.findById(item.productId);
     if (!product) {
@@ -205,10 +213,39 @@ export const validateProducts = async (
     if (item.quantity > product.stock) {
       throw new AppError(
         `Insufficient stock for '${item.productName}'. ${
-          product.stock === 0 ? "there's " : "Only"
+          product.stock === 0 ? "there's" : "Only"
         } ${product.stock === 0 ? "none" : product.stock} left.`,
         400
       );
     }
   }
+
+  if (
+    !location ||
+    typeof location !== "object" ||
+    !location.street ||
+    !location.city ||
+    !location.state ||
+    !location.country ||
+    !location.zipCode
+  ) {
+    throw new AppError(
+      "Invalid location. Please provide full address details.",
+      400
+    );
+  }
+
+  if (!phoneNumber) throw new AppError("Phone number is required", 400);
+  validatePhoneNumber(phoneNumber);
+};
+
+const validatePhoneNumber = (phoneNumber: string) => {
+  const localFormat = /^\d{11}$/;
+  const intlFormat = /^\+\d{1,3}\d{6,12}$/;
+
+  if (!localFormat.test(phoneNumber) && !intlFormat.test(phoneNumber)) {
+    throw new Error("Invalid Phone Number");
+  }
+
+  return phoneNumber;
 };
