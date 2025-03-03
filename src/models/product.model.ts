@@ -111,6 +111,13 @@ ProductSchema.pre("save", function (next) {
   next();
 });
 
+ProductSchema.index(
+  { category: 1 },
+  { collation: { locale: "en", strength: 2 } }
+);
+
+ProductSchema.index({ category: "text" });
+
 const Product: Model<IProduct> = mongoose.model<IProduct>(
   "Product",
   ProductSchema

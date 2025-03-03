@@ -8,8 +8,8 @@ import {
   getFeaturedProducts,
   getProductByCategory,
   getProductById,
-  getProductsByDifferentCategory,
   getProductsByMenCategory,
+  getProductsByNameOrCategory,
   getRelatedProducts,
   getTopRatedProducts,
   getUnarchivedProducts,
@@ -49,8 +49,8 @@ productRoute.get("/recommended", recommendedProducts);
 productRoute.get("/men", getAllMenProducts);
 productRoute.get("/kids", getAllKidsProducts);
 productRoute.get(
-  "/different_category/:mainCategory/:otherCategory?", // bro i had to name it this way because man i'm not touching express anymore :(
-  getProductsByDifferentCategory
+  "/products_by_other_category/:otherCatgory", // bro i had to name it this way because man i'm not touching express anymore :(
+  getProductsByNameOrCategory
 );
 productRoute.get("/men_category/:category", getProductsByMenCategory);
 productRoute.get("/related_products/:category", getRelatedProducts);

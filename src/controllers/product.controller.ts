@@ -582,13 +582,13 @@ export const getAllKidsProducts = async (
   }
 };
 
-export const getProductsByDifferentCategory = async (
+export const getProductsByNameOrCategory = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { mainCategory, otherCategory } = req.params;
+    const { otherCatgory } = req.params;
 
     const MAX_LIMIT = 100;
     const page = Math.max(1, Number(req.query.page) || 1);
@@ -598,20 +598,15 @@ export const getProductsByDifferentCategory = async (
     );
     const skip = (page - 1) * limit;
 
-    const mainCategoryRegex = new RegExp(mainCategory, "i");
-    const otherCategoryRegex = otherCategory
-      ? new RegExp(otherCategory, "i")
-      : null;
+    const otherCatgoryRegex = otherCatgory
+      .trim()
+      .split(/\s+/)
+      .map((word) => new RegExp(word, "i"));
 
     let filter: any = {
       isArchived: false,
-      $or: [{ category: mainCategoryRegex }, { name: mainCategoryRegex }],
+      $or: [{ category: otherCatgoryRegex }, { name: otherCatgoryRegex }],
     };
-
-    if (otherCategory) {
-      filter.$or.push({ category: otherCategoryRegex });
-      filter.$or.push({ name: otherCategoryRegex });
-    }
 
     const products = await Product.find(filter).skip(skip).limit(limit);
     const totalProducts = await Product.countDocuments(filter);
