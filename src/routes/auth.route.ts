@@ -7,7 +7,6 @@ import {
   resetPassword,
   signIn,
   signUp,
-  softLogout,
   verifyEmail,
 } from "../controllers/auth.controller";
 import { checkAuth } from "../middlewares/auth.middleware";
@@ -16,7 +15,6 @@ export const authRoute = express.Router();
 
 authRoute.post("/signup", signUp);
 authRoute.post("/signin", signIn);
-// authRoute.post("/logout", softLogout);
 authRoute.post("/logout", logout);
 authRoute.post("/verify-email", verifyEmail);
 authRoute.post("/forgot-password", forgotPassword);

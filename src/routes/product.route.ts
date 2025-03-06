@@ -11,7 +11,6 @@ import {
   getProductsByMenCategory,
   getProductsByNameOrCategory,
   getRelatedProducts,
-  getTopRatedProducts,
   getUnarchivedProducts,
   rateProduct,
   recommendedProducts,
@@ -43,7 +42,6 @@ productRoute.patch(
 );
 productRoute.get("/featured", getFeaturedProducts);
 productRoute.get("/all_unarchived", getUnarchivedProducts);
-productRoute.get("/top_rated", getTopRatedProducts);
 productRoute.patch("/rate_product/:id", protectedRoute, rateProduct);
 productRoute.get("/recommended", recommendedProducts);
 productRoute.get("/men", getAllMenProducts);

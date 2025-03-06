@@ -11,11 +11,9 @@ import {
   validateCredentials,
   validatePaystackWebhook,
 } from "../utils/payment.util";
-import { ObjectId } from "mongoose";
 import { AppError } from "../error/GlobalErrorHandler";
 import Order from "../models/order.model";
 import dotenv from "dotenv";
-import { createCoupon } from "../utils/coupon.util";
 dotenv.config();
 
 interface CalculateOrder {

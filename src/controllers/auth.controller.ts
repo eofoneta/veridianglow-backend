@@ -297,9 +297,3 @@ export const logout = async (
     next(error);
   }
 };
-
-export const softLogout = async (req: Request, res: Response) => {
-  res.clearCookie("accessToken");
-  res.clearCookie("refreshToken");
-  res.status(200);
-};

@@ -1,5 +1,6 @@
 import { AppError } from "../error/GlobalErrorHandler";
 import { IOrder } from "../models/order.model";
+import { formatCurrency } from "../utils/helper";
 import { PaystackEvent } from "../utils/payment.util";
 import {
   DELIVERED_ORDER_TEMPLATE,
@@ -91,9 +92,10 @@ export const sendOrderReceivedEmail = async (
     "{estimatedDeliveryDate}":
       formatDate(event.data.metadata.estimatedDeliveryDate) || "N/A",
     "{deliveryAddress}": event.data.metadata.location || "N/A",
-    "{deliveryFee}": `$${event.data.metadata.deliveryFee || "0.00"}`,
-    "{discount}": `$${event.data.metadata.discount || "0.00"}`,
-    "{totalAmount}": `$${event.data.amount / 100}`,
+    "{deliveryFee}": `$${
+      formatCurrency(event.data.metadata.deliveryFee) || "0.00"
+    }`,
+    "{totalAmount}": `${formatCurrency(event.data.amount / 100)}`,
     "{items}": event.data.metadata.products
       ? event.data.metadata.products
           .map(

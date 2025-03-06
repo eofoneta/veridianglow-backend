@@ -57,19 +57,6 @@ export const fetchOrderByStatus = async (
   }
 };
 
-export const fetchCustomerPaidOrders = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const order = await Order.find({ userId: req.user?.id, paid: true });
-    res.json(order);
-  } catch (error) {
-    next(error);
-  }
-};
-
 export const fetchCustomerFailedOrders = async (
   req: Request,
   res: Response,

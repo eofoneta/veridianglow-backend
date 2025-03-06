@@ -2,7 +2,6 @@ import express from "express";
 import { adminRoute, protectedRoute } from "../middlewares/auth.middleware";
 import {
   fetchCustomerFailedOrders,
-  fetchCustomerPaidOrders,
   fetchOrderByStatus,
   getAllCustomerOrder,
   getAllOrders,
@@ -20,12 +19,6 @@ orderRoute.patch(
   updateDeliveryStatus
 );
 orderRoute.post("/status", protectedRoute, adminRoute, fetchOrderByStatus);
-orderRoute.get(
-  "/customer_paid_orders",
-  adminRoute,
-  protectedRoute,
-  fetchCustomerPaidOrders
-);
 orderRoute.get(
   "/customer_failed_orders",
   protectedRoute,

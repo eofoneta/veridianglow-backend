@@ -362,22 +362,6 @@ export const getUnarchivedProducts = async (
   }
 };
 
-export const getTopRatedProducts = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const topRatedProducts = await Product.find(
-      { rating: { $gt: 3.5 } },
-      { isArchived: false }
-    );
-    res.json(topRatedProducts);
-  } catch (error) {
-    next(error);
-  }
-};
-
 export const rateProduct = async (
   req: Request,
   res: Response,
