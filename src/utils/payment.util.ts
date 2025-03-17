@@ -151,7 +151,6 @@ export const handleChargeSuccess = async (event: PaystackEvent) => {
     },
   }));
 
-  await sendOrderReceivedEmail(customer.email, event);
   await Product.bulkWrite(bulkOperations);
   const amountPaid = amount / 100;
   // create a free coupon for purchase over 100_000
@@ -160,6 +159,7 @@ export const handleChargeSuccess = async (event: PaystackEvent) => {
     console.log("Coupon generated", coupon.code);
   }
 
+  await sendOrderReceivedEmail(customer.email, event);
   console.log(
     `✅ Payment received: ${customer.email} paid ${
       amount / 100

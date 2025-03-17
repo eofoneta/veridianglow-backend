@@ -2,6 +2,7 @@ import { AppError } from "../error/GlobalErrorHandler";
 import { IOrder } from "../models/order.model";
 import { formatCurrency } from "../utils/helper";
 import { PaystackEvent } from "../utils/payment.util";
+import { sendEmail } from "./brevo";
 import {
   DELIVERED_ORDER_TEMPLATE,
   ORDER_CONFIRMED_TEMPLATE,
@@ -10,7 +11,6 @@ import {
   PASSWORD_RESET_SUCCESS_TEMPLATE,
   VERIFICATION_EMAIL_TEMPLATE,
 } from "./emailTemplates";
-import { mailtrapClient, sender } from "./mailtrap";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -20,22 +20,22 @@ export const sendVerificationEmail = async (
 ) => {
   const recipients = [{ email }];
 
-  try {
-    const response = await mailtrapClient.send({
-      from: sender,
-      to: recipients,
-      subject: "Verify your email",
-      html: VERIFICATION_EMAIL_TEMPLATE.replace(
-        "{verificationCode}",
-        verificationToken
-      ),
-      category: "Email verification",
-    });
-    console.log("email sent successfully", response);
-  } catch (error) {
-    console.error("Error sending email", error);
-    throw new AppError("Error sending email", 500);
-  }
+  const emailContent = {
+    to: recipients,
+    subject: "Verify your email",
+    htmlContent: VERIFICATION_EMAIL_TEMPLATE.replace(
+      "{verificationCode}",
+      verificationToken
+    ),
+    category: "Reset your password",
+  };
+
+  sendEmail(
+    email,
+    emailContent.subject,
+    emailContent.htmlContent,
+    emailContent.category
+  );
 };
 
 export const sendResetPasswordEmail = async (
@@ -44,40 +44,40 @@ export const sendResetPasswordEmail = async (
 ) => {
   const recipients = [{ email }];
 
-  try {
-    const response = await mailtrapClient.send({
-      from: sender,
-      to: recipients,
-      subject: "Reset Your password",
-      html: PASSWORD_RESET_REQUEST_TEMPLATE.replace(
-        "{resetURL}",
-        `${process.env.FRONTEND_DOMAIN}/reset-password/${resetToken}`
-      ),
-      category: "Reset your password",
-    });
-    console.log("email sent successfully", response);
-  } catch (error) {
-    console.error("Error sending email", error);
-    throw new AppError("Error sending email", 500);
-  }
+  const emailContent = {
+    to: recipients,
+    subject: "Reset Your password",
+    html: PASSWORD_RESET_REQUEST_TEMPLATE.replace(
+      "{resetURL}",
+      `${process.env.FRONTEND_DOMAIN}/reset-password/${resetToken}`
+    ),
+    category: "Reset your password",
+  };
+
+  sendEmail(
+    email,
+    emailContent.subject,
+    emailContent.html,
+    emailContent.category
+  );
 };
 
 export const sendResetSuccessEmail = async (email: string) => {
   const recipients = [{ email }];
 
-  try {
-    const response = await mailtrapClient.send({
-      from: sender,
-      to: recipients,
-      subject: "Password reset success",
-      html: PASSWORD_RESET_SUCCESS_TEMPLATE,
-      category: "Password reset success",
-    });
-    console.log("email sent successfully", response);
-  } catch (error) {
-    console.error("Error sending email", error);
-    throw new Error(`Error sending email ${error}`);
-  }
+  const emailContent = {
+    to: recipients,
+    subject: "Password reset success",
+    html: PASSWORD_RESET_SUCCESS_TEMPLATE,
+    category: "Password reset success",
+  };
+
+  sendEmail(
+    email,
+    emailContent.subject,
+    emailContent.html,
+    emailContent.category
+  );
 };
 
 export const sendOrderReceivedEmail = async (
@@ -115,13 +115,19 @@ export const sendOrderReceivedEmail = async (
     (match) => orderDetails[match] || match
   );
 
-  await mailtrapClient.send({
-    from: sender,
+  const emailContent = {
     to: [{ email }],
     subject: "Order confirmed",
     html: emailHtml,
     category: "Order confirmed",
-  });
+  };
+
+  sendEmail(
+    email,
+    emailContent.subject,
+    emailContent.html,
+    emailContent.category
+  );
 };
 
 export const sendOrderShipped = async (
@@ -153,13 +159,19 @@ export const sendOrderShipped = async (
     (match) => orderDetails[match] || match
   );
 
-  await mailtrapClient.send({
-    from: sender,
+  const emailContent = {
     to: [{ email }],
-    subject: "Order shipped",
+    subject: "Order Shipped",
     html: emailHtml,
-    category: "Order shipped",
-  });
+    category: "Order Shipped",
+  };
+
+  sendEmail(
+    email,
+    emailContent.subject,
+    emailContent.html,
+    emailContent.category
+  );
 };
 
 export const sendOrderDelivered = async (email: string, order: IOrder) => {
@@ -174,13 +186,19 @@ export const sendOrderDelivered = async (email: string, order: IOrder) => {
     (match) => orderDetails[match] || match
   );
 
-  await mailtrapClient.send({
-    from: sender,
+  const emailContent = {
     to: [{ email }],
-    subject: "Order delivered",
+    subject: "Order Delivered",
     html: emailHtml,
-    category: "Order delivered",
-  });
+    category: "Order Delivered",
+  };
+
+  sendEmail(
+    email,
+    emailContent.subject,
+    emailContent.html,
+    emailContent.category
+  );
 };
 
 const capitalize = (str: string) =>

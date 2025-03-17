@@ -30,7 +30,8 @@ export const signUp = async (
     const userExists = await User.findOne({ email });
     if (userExists) throw new AppError("User already exists", 400);
 
-    const newUser = await User.create({ firstName, lastName, email, password });
+    const newUser = new User({ firstName, lastName, email, password });
+    await newUser.save({ validateBeforeSave: false });
 
     const { accessToken, refreshToken } = generateTokens(newUser._id);
     await storeRefreshToken(newUser._id, refreshToken);

@@ -5,6 +5,7 @@
   "main": "server.ts",
   "scripts": {
     "start": "node dist/server.js",
+    "brevo": "ts-node src/email/mailtrap.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --watch src --exec ts-node src/server.ts",
     "build": "tsc"

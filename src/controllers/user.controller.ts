@@ -141,8 +141,23 @@ export const getWishlist = async (
 ) => {
   try {
     const user = await User.findById(req.user?.id);
+    if (!user) throw new AppError("User not found", 404);
+    const products = await Product.find({});
 
-    res.json({ wishlists: user?.wishlist });
+    user.wishlist = user.wishlist.filter((item) =>
+      products.some((product) => product.id === item.productId)
+    );
+
+    for (const item of user.wishlist) {
+      const product = products.find((p) => p.id === item.productId);
+      if (product && product.discountPrice !== item.discountPrice) {
+        item.discountPrice = product.discountPrice;
+      }
+      if (product && product.price !== item.price) {
+        item.price = product.price;
+      }
+    }
+    res.json({ wishlists: user.wishlist });
   } catch (error) {
     next(error);
   }
