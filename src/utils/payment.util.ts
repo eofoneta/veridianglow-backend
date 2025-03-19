@@ -9,6 +9,16 @@ import { sendOrderReceivedEmail } from "../email/emailService";
 import { CheckoutDetails } from "../controllers/payment.controller";
 import { createCoupon } from "./coupon.util";
 import { Types } from "mongoose";
+import { locationRates } from "../data/locationRates";
+
+export interface Address {
+  street: string;
+  city: string;
+  state: string;
+  country: string;
+  zipCode: string;
+  buildingType?: string;
+}
 
 export interface PaystackEvent {
   event: string;
@@ -31,13 +41,7 @@ export interface PaystackEvent {
         quantity: string; // metadata returns it as string
         price: number;
       }[];
-      location: {
-        street: string;
-        city: string;
-        state: string;
-        country: string;
-        zipCode: string;
-      };
+      location: Address;
       orderId: string;
       firstName: string;
       userId: Types.ObjectId;
@@ -52,21 +56,19 @@ export interface PaystackEvent {
   };
 }
 
-/**
- * @function fixedDeliveryFees is just for testing, NOT to be used in production
- */
-const fixedDeliveryFees: Record<string, number> = {
-  lagos: 1000,
-  abuja: 1500,
-  port_harcourt: 1800,
-  kano: 2000,
-  others: 2500,
-};
+export const getDeliveryFee = (address: Address) => {
+  const { state, city } = address;
 
-export const getDeliveryFee = (location: string): number => {
-  const baseFee =
-    fixedDeliveryFees[location.toLowerCase()] || fixedDeliveryFees["others"];
-  return baseFee;
+  //@ts-ignore
+  const stateRates = locationRates[state];
+
+  if (stateRates) {
+    if (stateRates[city]) {
+      return stateRates[city];
+    }
+  } else {
+    throw new AppError("Input address might be invalid or unsupported", 422);
+  }
 };
 
 export const convertToNaira = (amount: number): string => {
@@ -80,7 +82,7 @@ export const calculateTax = (subtotal: number): number => {
   return 0; // no tax added for now
 };
 
-export const calculateTotal = (subtotal: number, location: string): number => {
+export const calculateTotal = (subtotal: number, location: Address): number => {
   const deliveryFee = getDeliveryFee(location);
   const tax = calculateTax(subtotal);
   const totalAmount = subtotal + deliveryFee + tax;

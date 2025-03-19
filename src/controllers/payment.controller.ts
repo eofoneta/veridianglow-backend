@@ -85,14 +85,14 @@ export const calculateOrderDetails = async (
       (acc, item) => acc + item.price * item.quantity,
       0
     );
-    const amount = calculateTotal(subtotal, location.state);
+    const amount = calculateTotal(subtotal, location);
 
     /**
      * tax and delivery have been calculated in calculateTotal function
      * these two are information for metadata
      */
     const tax = calculateTax(amount);
-    const deliveryFee = getDeliveryFee(location.state);
+    const deliveryFee = getDeliveryFee(location);
 
     let discountedTotal = 0;
     if (couponCode) {

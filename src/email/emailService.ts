@@ -1,4 +1,3 @@
-import { AppError } from "../error/GlobalErrorHandler";
 import { IOrder } from "../models/order.model";
 import { formatCurrency } from "../utils/helper";
 import { PaystackEvent } from "../utils/payment.util";
@@ -91,9 +90,14 @@ export const sendOrderReceivedEmail = async (
       capitalize(event.data.metadata.firstName) || "Valued Customer",
     "{estimatedDeliveryDate}":
       formatDate(event.data.metadata.estimatedDeliveryDate) || "N/A",
-    "{deliveryAddress}": event.data.metadata.location || "N/A",
-    "{deliveryFee}": `$${
-      formatCurrency(event.data.metadata.deliveryFee) || "0.00"
+    "{deliveryAddress}":
+      `${event.data.metadata.location.street},
+       ${event.data.metadata.location.city},
+        ${event.data.metadata.location.state},
+        ${event.data.metadata.location.zipCode},
+        ${event.data.metadata.location.country}` || "N/A",
+    "{deliveryFee}": `${
+      formatCurrency(event.data.metadata.deliveryFee) || "N/A"
     }`,
     "{totalAmount}": `${formatCurrency(event.data.amount / 100)}`,
     "{items}": event.data.metadata.products
@@ -103,7 +107,7 @@ export const sendOrderReceivedEmail = async (
               `<tr>
                 <td>${item.productName}</td>
                 <td>${item.quantity}</td>
-                <td>$${item.price}</td>
+                <td>${formatCurrency(item.price)}</td>
               </tr>`
           )
           .join("")
@@ -139,7 +143,12 @@ export const sendOrderShipped = async (
     "{estimatedDeliveryDate}": formatDate(order.estimatedDeliveryDate) || "N/A",
     "{shipmentDate}": formatDate(order.updatedAt) || "N/A",
     "{frontendUrl}": `${process.env.FRONTEND_DOMAIN}/order`,
-    "{deliveryAddress}": order.deliveryLocation || "N/A",
+    "{deliveryAddress}":
+      `${order.deliveryLocation.street},
+      ${order.deliveryLocation.city},
+      ${order.deliveryLocation.state},
+      ${order.deliveryLocation.zipCode},
+      ${order.deliveryLocation.country}` || "N/A",
     "{items}": order.products
       ? order.products
           .map(
@@ -147,7 +156,7 @@ export const sendOrderShipped = async (
               `<tr>
                 <td>${item.productName}</td>
                 <td>${item.quantity}</td>
-                <td>₦${item.price}</td>
+                <td>${formatCurrency(item.price)}</td>
               </tr>`
           )
           .join("")

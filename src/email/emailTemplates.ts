@@ -180,7 +180,7 @@ export const ORDER_CONFIRMED_TEMPLATE = /*html */ `
         </tr>
         {items} <!-- This will be replaced with actual rows -->
         <tr>
-          <td><strong>estimated delivery date</strong></td>
+          <td><strong>estimated delivery</strong></td>
           <td colspan="2" class="total">{estimatedDeliveryDate}</td>
         </tr>
         <tr>
@@ -190,10 +190,6 @@ export const ORDER_CONFIRMED_TEMPLATE = /*html */ `
         <tr>
           <td><strong>Delivery</strong></td>
           <td colspan="2" class="total">{deliveryFee}</td>
-        </tr>
-        <tr>
-          <td><strong>discount</strong></td>
-          <td colspan="2" class="total">{discount}</td>
         </tr>
         <tr>
           <td><strong>Total</strong></td>
