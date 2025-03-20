@@ -36,6 +36,7 @@ export const createProduct = async (
       image,
       brand,
       category,
+      weight,
       stock,
       howToUse,
       ingredients,
@@ -64,6 +65,7 @@ export const createProduct = async (
       ingredients,
       subCategory,
       isFeatured,
+      weight,
       isArchived: isFeatured ? false : isArchived,
     });
 
@@ -115,6 +117,7 @@ export const updateProduct = async (
       discountPrice,
       description,
       image,
+      weight,
       brand,
       category,
       stock,
@@ -144,6 +147,7 @@ export const updateProduct = async (
         category,
         stock,
         howToUse,
+        weight,
         ingredients,
         subCategory,
         isFeatured,

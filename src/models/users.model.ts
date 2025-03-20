@@ -1,5 +1,7 @@
-import mongoose, { CallbackError, Document, Schema } from "mongoose";
+import mongoose, { CallbackError, Document } from "mongoose";
 import bcrypt from "bcryptjs";
+import dotenv from "dotenv";
+dotenv.config();
 
 export interface IUser extends Document {
   firstName: string;
@@ -12,6 +14,7 @@ export interface IUser extends Document {
     image: string;
     price: number;
     stock: number;
+    totalWeight: number;
     category: string;
     discountPrice: number;
     quantity: number;
@@ -103,6 +106,10 @@ const userSchema = new mongoose.Schema<IUser>(
           required: true,
         },
         total: {
+          type: Number,
+          required: true,
+        },
+        totalWeight: {
           type: Number,
           required: true,
         },
