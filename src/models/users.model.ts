@@ -15,6 +15,7 @@ export interface IUser extends Document {
     price: number;
     stock: number;
     totalWeight: number;
+    weight: number;
     category: string;
     discountPrice: number;
     quantity: number;
@@ -110,6 +111,10 @@ const userSchema = new mongoose.Schema<IUser>(
           required: true,
         },
         totalWeight: {
+          type: Number,
+          required: true,
+        },
+        weight: {
           type: Number,
           required: true,
         },

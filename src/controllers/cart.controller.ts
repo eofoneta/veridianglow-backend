@@ -8,6 +8,7 @@ interface CartItem {
   name: string;
   image: string;
   totalWeight: number;
+  weight: number;
   price: number;
   stock: number;
   category: string;
