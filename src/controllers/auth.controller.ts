@@ -126,7 +126,7 @@ export const verifyEmail = async (
     user.verificationToken = null;
     user.verificationTokenExpiresAt = null;
 
-    await user.save();
+    await user.save({ validateBeforeSave: false });
 
     const { accessToken, refreshToken } = generateTokens(user._id);
     await storeRefreshToken(user._id, refreshToken);

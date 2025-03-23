@@ -7,7 +7,7 @@ const MONGODB_NAME = process.env.MONGODB_NAME;
 
 export const connectDb = () => {
   mongoose
-    .connect(`${MONGODB_URL}${MONGODB_NAME}`)
+    .connect(`${MONGODB_URL}`)
     .then(() => {
       console.log("Connected to", MONGODB_NAME, "database");
     })

@@ -372,7 +372,7 @@ export const rateProduct = async (
   next: NextFunction
 ) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params; // product Id
     const { rating } = req.body;
 
     if (!rating || rating < 1 || rating > 5) {

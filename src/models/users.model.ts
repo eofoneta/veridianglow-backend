@@ -112,7 +112,7 @@ const userSchema = new mongoose.Schema<IUser>(
         },
         totalWeight: {
           type: Number,
-          required: true,
+          // required: true,
         },
         weight: {
           type: Number,
