@@ -17,9 +17,7 @@ EXPOSE 8000
 
 CMD ["node", "dist/server.js"]
 
-# command to build docker 
-# docker build -t veridianglow-api/veridianglow-api:1.0.0 -f
-# run this command to have a latest and previous version
-# docker build -t veridianglow/veridianglow:latest -t veridianglow/veridianglow:1.0.0 -f Dockerfile .
-# run this command to push to dockerhub 
-# 
+# build docker 
+# docker build -t lordmaryo/veridianglow-api:latest -f Dockerfile .
+# push to dockerhub 
+# docker push lordmaryo/veridianglow-api:latest
