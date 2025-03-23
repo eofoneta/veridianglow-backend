@@ -6,6 +6,7 @@ import {
   generateVerificationToken,
   setCookies,
   storeRefreshToken,
+  validatePassword,
 } from "../utils/auth.util";
 import {
   sendResetPasswordEmail,
@@ -29,6 +30,7 @@ export const signUp = async (
 
     const userExists = await User.findOne({ email });
     if (userExists) throw new AppError("User already exists", 400);
+    validatePassword(password);
 
     const newUser = new User({ firstName, lastName, email, password });
     await newUser.save({ validateBeforeSave: false });
@@ -231,6 +233,7 @@ export const resetPassword = async (
     if (!password) throw new AppError("Please provide a new password", 400);
     if (!user) throw new AppError("Invalid or expired token", 400);
 
+    validatePassword(password);
     /**
      * There's a pre-save hook that automatically hash every user's password
      * to the database, Which is why it is assigned directly to the user object
@@ -239,7 +242,7 @@ export const resetPassword = async (
     user.resetPasswordToken = null;
     user.resetPasswordExpiresAt = null;
 
-    await user.save();
+    await user.save({ validateBeforeSave: false });
 
     sendResetSuccessEmail(user.email);
     res.json({ message: "Password reset successfully" });
