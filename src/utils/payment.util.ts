@@ -258,5 +258,5 @@ const validatePhoneNumber = (phoneNumber: string) => {
     throw new Error("Invalid Phone Number");
   }
 
-  return phoneNumber;
+  return phoneNumber; // this returned value is useless
 };

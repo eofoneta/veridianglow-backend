@@ -25,28 +25,18 @@ interface CalculateOrder {
     zipCode: string;
     buildingType?: string;
   };
-  couponCode: string | undefined;
+  couponCode?: string;
   phoneNumber: string;
 }
 
-export type CheckoutDetails = {
-  phoneNumber: string;
+export type CheckoutDetails = CalculateOrder & {
   products: {
     productName: string;
     productId: string;
     quantity: number;
     price: number;
   }[];
-  couponCode?: string;
   orderNote?: string;
-  location: {
-    street: string;
-    city: string;
-    state: string;
-    country: string;
-    zipCode: string;
-    buildingType?: string;
-  };
   currency: "NGN";
   subtotal: number;
   deliveryFee: number;
